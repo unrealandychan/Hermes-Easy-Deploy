@@ -1,0 +1,60 @@
+# ── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ── IDE / Editors ────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.orig
+
+# ── Node / Next.js (hermes-deploy-site) ─────────────────────────────────────
+hermes-deploy-site/node_modules/
+hermes-deploy-site/.next/
+hermes-deploy-site/.vercel/
+hermes-deploy-site/out/
+hermes-deploy-site/.env
+hermes-deploy-site/.env.local
+hermes-deploy-site/.env*.local
+hermes-deploy-site/npm-debug.log*
+hermes-deploy-site/yarn-debug.log*
+hermes-deploy-site/yarn-error.log*
+
+# ── Terraform (hermes-deploy) ────────────────────────────────────────────────
+hermes-deploy/terraform/**/.terraform/
+hermes-deploy/terraform/**/terraform.tfstate
+hermes-deploy/terraform/**/terraform.tfstate.backup
+hermes-deploy/terraform/**/terraform.tfstate.d/
+hermes-deploy/terraform/**/.terraform.lock.hcl
+hermes-deploy/terraform/**/terraform.tfvars
+hermes-deploy/terraform/**/terraform.tfvars.json
+hermes-deploy/terraform/**/*.auto.tfvars
+hermes-deploy/terraform/**/crash.log
+hermes-deploy/terraform/**/override.tf
+hermes-deploy/terraform/**/override.tf.json
+
+# ── Bash CLI secrets / runtime state ────────────────────────────────────────
+hermes-deploy/config/hermes.yaml
+*.tfvars
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Secrets / credentials — never commit ────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+credentials.json

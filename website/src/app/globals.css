@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────────────── */
+:root {
+  --bg:           #08090e;
+  --surface:      #0c0e16;
+  --bg-card:      #0f1117;
+  --bg-card-alt:  #12151f;
+  --card-bg:      #0f1117;
+  --terminal-bg:  #0d1117;
+  --border:       rgba(255,255,255,0.07);
+  --border-glow:  rgba(245,158,11,0.35);
+
+  --amber:        #f59e0b;
+  --amber-dim:    #d97706;
+  --amber-glow:   rgba(245,158,11,0.15);
+
+  --purple:       #8b5cf6;
+  --purple-dim:   #7c3aed;
+
+  --text:         #f8f8f8;
+  --text-muted:   #9ca3af;
+  --text-dim:     #6b7280;
+
+  --code-bg:      #0d1117;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Gradient text utility ─────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ──────────────────────────────────────────────────────── */
+.glow-amber {
+  box-shadow: 0 0 40px rgba(245,158,11,0.12), 0 0 80px rgba(245,158,11,0.05);
+}
+.glow-amber-sm {
+  box-shadow: 0 0 16px rgba(245,158,11,0.20);
+}
+
+/* ── Card base ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 24px rgba(245,158,11,0.08);
+}
+
+/* ── Terminal / code block ─────────────────────────────────────────────── */
+.terminal {
+  background: var(--code-bg);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow: hidden;
+}
+.terminal-bar {
+  background: #1a1d26;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.terminal-body {
+  padding: 20px 24px;
+  overflow-x: auto;
+}
+
+/* ── Default badge style (no accent) ──────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text-muted);
+}
+.badge-amber {
+  background: var(--amber-glow);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: var(--amber);
+}
+
+/* ── Step circle ───────────────────────────────────────────────────────── */
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--amber), var(--purple));
+  color: #000;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* ── Mesh / gradient hero background ──────────────────────────────────── */
+.mesh-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,158,11,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139,92,246,0.06) 0%, transparent 60%),
+    var(--bg);
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor { animation: cursor-blink 1s step-end infinite; }

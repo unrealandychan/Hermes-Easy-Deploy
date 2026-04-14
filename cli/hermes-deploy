@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# hermes-deploy — Deploy the Hermes Agent to AWS, Azure, or GCP
+# Usage: hermes-deploy [command] [options]
+set -euo pipefail
+
+HERMES_DEPLOY_VERSION="1.0.0"
+HERMES_DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HERMES_DEPLOY_HOME="${HOME}/.hermes-deploy"
+
+# ─── Source libraries ───────────────────────────────────────────────────────
+# shellcheck source=lib/enums.sh  — must be first; other libs depend on enum arrays
+source "${HERMES_DEPLOY_DIR}/lib/enums.sh"
+# shellcheck source=lib/ui.sh
+source "${HERMES_DEPLOY_DIR}/lib/ui.sh"
+# shellcheck source=lib/preflight.sh
+source "${HERMES_DEPLOY_DIR}/lib/preflight.sh"
+# shellcheck source=lib/config.sh
+source "${HERMES_DEPLOY_DIR}/lib/config.sh"
+# shellcheck source=lib/aws.sh
+source "${HERMES_DEPLOY_DIR}/lib/aws.sh"
+# shellcheck source=lib/azure.sh
+source "${HERMES_DEPLOY_DIR}/lib/azure.sh"
+# shellcheck source=lib/gcp.sh
+source "${HERMES_DEPLOY_DIR}/lib/gcp.sh"
+
+# ─── Globals ────────────────────────────────────────────────────────────────
+CLOUD=""
+REGION=""
+DRY_RUN=false
+NO_COLOR=false
+SUBCOMMAND=""
+REMAINING_ARGS=()
+
+# ─── Flag parser ────────────────────────────────────────────────────────────
+parse_flags() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --cloud)    CLOUD="$(echo "$2" | tr '[:upper:]' '[:lower:]')"; validate_cloud "$CLOUD"; shift 2 ;;
+      --region)   REGION="$2";  shift 2 ;;
+      --dry-run)  DRY_RUN=true; shift   ;;
+      --no-color) NO_COLOR=true; shift  ;;
+      --help|-h)  cmd_help; exit 0      ;;
+      -*)  error "Unknown flag: $1"; exit 1 ;;
+      *)   SUBCOMMAND="$1"; shift; REMAINING_ARGS=("$@"); break ;;
+    esac
+  done
+}
+
+# ─── Help ───────────────────────────────────────────────────────────────────
+cmd_help() {
+  hermes_banner
+  echo ""
+  gum style --foreground 212 --bold "USAGE"
+  echo "  hermes-deploy [command] [options]"
+  echo ""
+  gum style --foreground 212 --bold "COMMANDS"
+  printf "  %-12s %s\n" "deploy"  "Deploy Hermes Agent to a cloud provider (default)"
+  printf "  %-12s %s\n" "status"  "Show live resource status"
+  printf "  %-12s %s\n" "ssh"     "Open a shell on the Hermes instance"
+  printf "  %-12s %s\n" "logs"    "Stream live Hermes gateway logs"
+  printf "  %-12s %s\n" "secrets" "Update API keys in the cloud vault"
+  printf "  %-12s %s\n" "destroy" "Tear down all deployed resources"
+  printf "  %-12s %s\n" "version" "Print version"
+  echo ""
+  gum style --foreground 212 --bold "OPTIONS"
+  printf "  %-20s %s\n" "--cloud aws|azure|gcp" "Target cloud provider"
+  printf "  %-20s %s\n" "--region REGION"        "Cloud region (e.g. ap-east-1)"
+  printf "  %-20s %s\n" "--dry-run"              "Show plan only, no resources created"
+  printf "  %-20s %s\n" "--no-color"             "Disable color output"
+  printf "  %-20s %s\n" "--help"                 "Show this help"
+  echo ""
+  gum style --foreground 212 --bold "EXAMPLES"
+  echo "  hermes-deploy                               # launch the wizard"
+  echo "  hermes-deploy deploy --cloud aws            # deploy to AWS"
+  echo "  hermes-deploy deploy --cloud gcp --dry-run  # preview GCP plan"
+  echo "  hermes-deploy ssh                           # SSH into the instance"
+  echo "  hermes-deploy secrets                       # rotate API keys"
+  echo "  hermes-deploy destroy                       # tear everything down"
+  echo ""
+}
+
+# ─── Version ────────────────────────────────────────────────────────────────
+cmd_version() {
+  echo "hermes-deploy v${HERMES_DEPLOY_VERSION}"
+}
+
+# ─── Deploy ─────────────────────────────────────────────────────────────────
+cmd_deploy() {
+  hermes_banner
+  preflight_check
+
+  config_load
+
+  if [[ -n "$CLOUD" ]]; then
+    CLOUD="$(echo "$CLOUD" | tr '[:upper:]' '[:lower:]')"
+  else
+    local cloud_choice
+    cloud_choice=$(choose_one "Choose your cloud provider" "AWS" "Azure" "GCP")
+    CLOUD="$(echo "$cloud_choice" | tr '[:upper:]' '[:lower:]')"
+  fi
+
+  case "$CLOUD" in
+    aws)   aws_wizard   ;;
+    azure) azure_wizard ;;
+    gcp)   gcp_wizard   ;;
+    *)     error "Unknown cloud provider: ${CLOUD}"; exit 1 ;;
+  esac
+}
+
+# ─── Status ─────────────────────────────────────────────────────────────────
+cmd_status() {
+  config_load
+  [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-deploy deploy"; exit 1; }
+
+  hermes_banner
+  case "$CLOUD" in
+    aws)   aws_status   ;;
+    azure) azure_status ;;
+    gcp)   gcp_status   ;;
+  esac
+}
+
+# ─── SSH ────────────────────────────────────────────────────────────────────
+cmd_ssh() {
+  config_load
+  [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-deploy deploy"; exit 1; }
+
+  case "$CLOUD" in
+    aws)   aws_ssh   ;;
+    azure) azure_ssh ;;
+    gcp)   gcp_ssh   ;;
+  esac
+}
+
+# ─── Logs ───────────────────────────────────────────────────────────────────
+cmd_logs() {
+  config_load
+  [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-deploy deploy"; exit 1; }
+
+  case "$CLOUD" in
+    aws)   aws_logs   ;;
+    azure) azure_logs ;;
+    gcp)   gcp_logs   ;;
+  esac
+}
+
+# ─── Secrets ────────────────────────────────────────────────────────────────
+cmd_secrets() {
+  config_load
+  [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-deploy deploy"; exit 1; }
+
+  hermes_banner
+  case "$CLOUD" in
+    aws)   aws_secrets   ;;
+    azure) azure_secrets ;;
+    gcp)   gcp_secrets   ;;
+  esac
+}
+
+# ─── Destroy ────────────────────────────────────────────────────────────────
+cmd_destroy() {
+  config_load
+  [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-deploy deploy"; exit 1; }
+
+  hermes_banner
+  confirm_destructive "This will PERMANENTLY destroy your Hermes instance and all data."
+
+  case "$CLOUD" in
+    aws)   aws_destroy   ;;
+    azure) azure_destroy ;;
+    gcp)   gcp_destroy   ;;
+  esac
+}
+
+# ─── Main ───────────────────────────────────────────────────────────────────
+main() {
+  mkdir -p "${HERMES_DEPLOY_HOME}"
+  parse_flags "$@"
+
+  local cmd="${SUBCOMMAND:-deploy}"
+
+  case "$cmd" in
+    deploy)  cmd_deploy  ;;
+    status)  cmd_status  ;;
+    ssh)     cmd_ssh     ;;
+    logs)    cmd_logs    ;;
+    secrets) cmd_secrets ;;
+    destroy) cmd_destroy ;;
+    version) cmd_version ;;
+    help)    cmd_help    ;;
+    *)
+      error "Unknown command: ${cmd}"
+      echo ""
+      cmd_help
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
