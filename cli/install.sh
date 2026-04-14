@@ -154,6 +154,7 @@ install_hermes_deploy() {
 
   local src_dir=""
   local main_bin=""
+  local candidate_dir=""
 
   # If this script is running from a local clone, use that
   local script_dir
@@ -165,15 +166,20 @@ install_hermes_deploy() {
   fi
 
   if [[ -n "$script_dir" ]]; then
-    if [[ -f "${script_dir}/hermes-deploy" ]]; then
-      main_bin="hermes-deploy"
-    elif [[ -f "${script_dir}/Hermes-Easy-Deploy" ]]; then
-      main_bin="Hermes-Easy-Deploy"
-    fi
+    for candidate_dir in "$script_dir" "$script_dir/cli"; do
+      if [[ -f "$candidate_dir/hermes-deploy" ]]; then
+        src_dir="$candidate_dir"
+        main_bin="hermes-deploy"
+        break
+      elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+        src_dir="$candidate_dir"
+        main_bin="Hermes-Easy-Deploy"
+        break
+      fi
+    done
   fi
 
-  if [[ -n "$script_dir" && -n "$main_bin" ]]; then
-    src_dir="$script_dir"
+  if [[ -n "$src_dir" && -n "$main_bin" ]]; then
     info "Using local source: $src_dir"
   else
     # Download from GitHub releases
@@ -184,13 +190,18 @@ install_hermes_deploy() {
     local archive_url="https://github.com/unrealandychan/Hermes-Easy-Deploy/archive/refs/tags/v${HERMES_DEPLOY_VERSION}.tar.gz"
     info "Downloading from ${archive_url}..."
     curl -fsSL "$archive_url" | tar -xz -C "$tmp_dir" --strip-components=1
-    src_dir="$tmp_dir"
 
-    if [[ -f "$src_dir/hermes-deploy" ]]; then
-      main_bin="hermes-deploy"
-    elif [[ -f "$src_dir/Hermes-Easy-Deploy" ]]; then
-      main_bin="Hermes-Easy-Deploy"
-    fi
+    for candidate_dir in "$tmp_dir/cli" "$tmp_dir"; do
+      if [[ -f "$candidate_dir/hermes-deploy" ]]; then
+        src_dir="$candidate_dir"
+        main_bin="hermes-deploy"
+        break
+      elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+        src_dir="$candidate_dir"
+        main_bin="Hermes-Easy-Deploy"
+        break
+      fi
+    done
   fi
 
   if [[ -z "$main_bin" ]]; then
