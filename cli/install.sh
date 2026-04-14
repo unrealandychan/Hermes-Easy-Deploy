@@ -193,6 +193,15 @@ install_hermes_deploy() {
   local main_bin=""
   local candidate_dir=""
 
+  is_modern_cli_entrypoint() {
+    local bin_path="$1"
+    [[ -f "$bin_path" ]] || return 1
+
+    # New entrypoint must handle both Bash 4+ gating and symlink-safe directory resolution.
+    grep -q "BASH_VERSINFO\[0\]" "$bin_path" \
+      && grep -q "resolve_script_dir" "$bin_path"
+  }
+
   # If this script is running from a local clone, use that
   local script_dir
   local script_source="${BASH_SOURCE[0]:-}"
@@ -239,6 +248,12 @@ install_hermes_deploy() {
         break
       fi
     done
+
+    if [[ -n "$main_bin" ]] && ! is_modern_cli_entrypoint "$src_dir/$main_bin"; then
+      warn "Tagged archive contains an outdated CLI entrypoint; switching to latest main branch payload."
+      src_dir=""
+      main_bin=""
+    fi
 
     if [[ -z "$main_bin" ]]; then
       local main_archive_url="https://github.com/unrealandychan/Hermes-Easy-Deploy/archive/refs/heads/main.tar.gz"
