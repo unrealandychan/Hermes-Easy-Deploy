@@ -4,7 +4,33 @@
 set -euo pipefail
 
 HERMES_DEPLOY_VERSION="1.0.0"
-HERMES_DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# enums.sh uses associative arrays, which require Bash 4+.
+if (( BASH_VERSINFO[0] < 4 )); then
+  for bash_candidate in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+    if [[ -x "$bash_candidate" ]]; then
+      exec "$bash_candidate" "$0" "$@"
+    fi
+  done
+
+  echo "Hermes-Easy-Deploy requires Bash 4+." >&2
+  echo "Install it with: brew install bash" >&2
+  exit 1
+fi
+
+resolve_script_dir() {
+  local source_path="${BASH_SOURCE[0]}"
+  while [[ -L "$source_path" ]]; do
+    local source_dir
+    source_dir="$(cd "$(dirname "$source_path")" && pwd)"
+    source_path="$(readlink "$source_path")"
+    [[ "$source_path" != /* ]] && source_path="$source_dir/$source_path"
+  done
+
+  cd "$(dirname "$source_path")" && pwd
+}
+
+HERMES_DEPLOY_DIR="$(resolve_script_dir)"
 HERMES_DEPLOY_HOME="${HOME}/.Hermes-Easy-Deploy"
 
 # ─── Source libraries ───────────────────────────────────────────────────────

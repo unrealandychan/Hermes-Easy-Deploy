@@ -36,6 +36,43 @@ require_sudo() {
   fi
 }
 
+# ── Ensure Bash 4+ for CLI runtime ─────────────────────────────────────────
+install_bash() {
+  local bash_major
+  bash_major="$(bash -c 'echo "${BASH_VERSINFO[0]}"' 2>/dev/null || echo 0)"
+
+  if [[ "$bash_major" -ge 4 ]]; then
+    ok "bash $(bash --version | head -1 | sed 's/^GNU bash, version //') already installed"
+    return
+  fi
+
+  info "Installing Bash 4+ (required by Hermes-Easy-Deploy)..."
+
+  case "$OS" in
+    Darwin)
+      command -v brew &>/dev/null || die "Homebrew is required to install Bash 4+ on macOS. Install from https://brew.sh"
+      brew install bash
+      ;;
+    Linux)
+      if command -v apt-get &>/dev/null; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq bash
+      elif command -v yum &>/dev/null; then
+        sudo yum install -y bash
+      elif command -v dnf &>/dev/null; then
+        sudo dnf install -y bash
+      else
+        die "Could not install Bash automatically. Please install Bash 4+ manually."
+      fi
+      ;;
+    *)
+      die "Unsupported OS. Install Bash 4+ manually."
+      ;;
+  esac
+
+  ok "bash 4+ installed"
+}
+
 # ── Install gum ─────────────────────────────────────────────────────────────
 install_gum() {
   if command -v gum &>/dev/null; then
@@ -202,6 +239,29 @@ install_hermes_deploy() {
         break
       fi
     done
+
+    if [[ -z "$main_bin" ]]; then
+      local main_archive_url="https://github.com/unrealandychan/Hermes-Easy-Deploy/archive/refs/heads/main.tar.gz"
+      info "Tagged archive did not contain a usable CLI; retrying from ${main_archive_url}..."
+
+      local tmp_main_dir
+      tmp_main_dir=$(mktemp -d)
+      trap "rm -rf $tmp_dir $tmp_main_dir" EXIT
+
+      curl -fsSL "$main_archive_url" | tar -xz -C "$tmp_main_dir" --strip-components=1
+
+      for candidate_dir in "$tmp_main_dir/cli" "$tmp_main_dir"; do
+        if [[ -f "$candidate_dir/hermes-deploy" ]]; then
+          src_dir="$candidate_dir"
+          main_bin="hermes-deploy"
+          break
+        elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+          src_dir="$candidate_dir"
+          main_bin="Hermes-Easy-Deploy"
+          break
+        fi
+      done
+    fi
   fi
 
   if [[ -z "$main_bin" ]]; then
@@ -228,6 +288,7 @@ main() {
   banner
   require_sudo
 
+  install_bash
   install_jq
   install_gum
   install_terraform
