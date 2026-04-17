@@ -14,12 +14,6 @@ provider "google" {
   zone    = var.zone
 }
 
-# Dedicated service account — only needs Secret Manager access
-resource "google_service_account" "hermes" {
-  account_id   = "hermes-agent-sa"
-  display_name = "Hermes Agent Service Account"
-}
-
 resource "google_compute_instance" "hermes" {
   name         = "hermes-instance"
   machine_type = var.machine_type
@@ -37,24 +31,6 @@ resource "google_compute_instance" "hermes" {
     network = "default"
     # Assign an ephemeral public IP
     access_config {}
-  }
-
-  service_account {
-    email = google_service_account.hermes.email
-    # cloud-platform scope is required for Secret Manager API access
-    scopes = ["cloud-platform"]
-  }
-
-  # bootstrap.sh is a Terraform templatefile. The VM pulls API keys from
-  # Secret Manager via its Service Account at boot — no secrets in metadata.
-  metadata = {
-    startup-script = templatefile("${path.module}/bootstrap.sh", {
-      HERMES_CLOUD  = "gcp"
-      AWS_REGION    = ""
-      SSM_PREFIX    = ""
-      AZURE_KV_NAME = ""
-      GCP_PROJECT   = var.project_id
-    })
   }
 
   tags = ["hermes-agent"]

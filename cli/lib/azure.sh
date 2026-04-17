@@ -73,9 +73,6 @@ azure_wizard() {
   fi
   success "${key_count} key(s) provided"
 
-  # Globally unique Key Vault name (5–24 chars, alphanumeric + hyphens)
-  local kv_name="hermes-kv-$(openssl rand -hex 4)"
-
   # ── Step 5: Summary ───────────────────────────────────────────────────────
   step_header 5 $steps "Deployment Summary"
   summary_table \
@@ -84,7 +81,6 @@ azure_wizard() {
     "VM Size"      "$vm_size" \
     "Disk"         "50 GB Premium_LRS (encrypted)" \
     "Resource Grp" "hermes-rg" \
-    "Key Vault"    "$kv_name" \
     "Allowed IP"   "$my_ip" \
     "API Keys"     "${key_count} provided"
 
@@ -96,31 +92,19 @@ azure_wizard() {
   local tf_dir="${HERMES_DEPLOY_HOME}/azure"
   mkdir -p "$tf_dir"
   cp -r "${HERMES_DEPLOY_DIR}/terraform/azure/." "$tf_dir/"
-  cp "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh" "${tf_dir}/bootstrap.sh"
-  cp "${HERMES_DEPLOY_DIR}/config/hermes.yaml.tpl" "${tf_dir}/hermes.yaml.tpl"
 
   cat > "${tf_dir}/terraform.tfvars" <<EOF
 location         = "${REGION}"
 vm_size          = "${vm_size}"
 allowed_ssh_cidr = "${allowed_cidr}"
 ssh_public_key   = "${ssh_pub_key_content}"
-key_vault_name   = "${kv_name}"
 EOF
-
-  cat > "${tf_dir}/secrets.auto.tfvars" <<EOF
-openrouter_api_key = "${openrouter_key}"
-openai_api_key     = "${openai_key}"
-anthropic_api_key  = "${anthropic_key}"
-gemini_api_key     = "${gemini_key}"
-EOF
-  chmod 600 "${tf_dir}/secrets.auto.tfvars"
 
   config_set "cloud"          "azure"
   config_set "region"         "$REGION"
   config_set "tf_dir"         "$tf_dir"
   config_set "ssh_key_path"   "$ssh_private_key"
   config_set "ssh_user"       "azureuser"
-  config_set "key_vault_name" "$kv_name"
   config_set "resource_group" "hermes-rg"
 
   # ── Terraform ─────────────────────────────────────────────────────────────
@@ -146,6 +130,13 @@ EOF
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "$instance_id"
+
+  # ── SSH-based installation ─────────────────────────────────────────────────
+  ssh_wait   "$ip" "azureuser" "$ssh_private_key"
+  ssh_upload_env "$ip" "azureuser" "$ssh_private_key" \
+    "$openrouter_key" "$openai_key" "$anthropic_key" "$gemini_key"
+  ssh_install "$ip" "azureuser" "$ssh_private_key" \
+    "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh"
 
   post_deploy_guide "azure" "$ip" "$instance_id" "$REGION" "$ssh_private_key"
 }
@@ -216,37 +207,31 @@ azure_logs() {
 
 # ─── Secrets ────────────────────────────────────────────────────────────────
 azure_secrets() {
-  local kv_name
-  kv_name=$(config_get "key_vault_name")
+  local ip ssh_key
+  ip=$(config_get "public_ip")
+  ssh_key="$(config_get "ssh_key_path")"
 
-  gum style --bold --foreground 212 "Update API Keys in Azure Key Vault: ${kv_name}"
+  gum style --bold --foreground 212 "Update API Keys on the Hermes instance"
   echo ""
 
   local provider
   provider=$(choose_one "Which provider's key?" \
-    "OpenRouter  (openrouter-api-key)" \
-    "OpenAI      (openai-api-key)" \
-    "Anthropic   (anthropic-api-key)" \
-    "Gemini      (gemini-api-key)")
+    "OpenRouter  (OPENROUTER_API_KEY)" \
+    "OpenAI      (OPENAI_API_KEY)" \
+    "Anthropic   (ANTHROPIC_API_KEY)" \
+    "Gemini      (GEMINI_API_KEY)")
 
-  local secret_name
-  secret_name=$(echo "$provider" | grep -oE '\([^)]+\)' | tr -d '()')
+  local var_name
+  var_name=$(echo "$provider" | grep -oE '\([^)]+\)' | tr -d '()')
   local new_value
-  new_value=$(masked_input "New value for ${secret_name}")
+  new_value=$(masked_input "New value for ${var_name}")
 
   if [[ -z "$new_value" ]]; then
     warn "No value entered. Skipped."
     return
   fi
 
-  spinner "Updating ${secret_name}..." \
-    az keyvault secret set \
-      --vault-name "$kv_name" \
-      --name "$secret_name" \
-      --value "$new_value"
-
-  success "Key updated in Key Vault."
-  warn "To apply: Hermes-Easy-Deploy ssh  →  sudo systemctl restart hermes-gateway"
+  ssh_update_key "$ip" "azureuser" "$ssh_key" "$var_name" "$new_value"
 }
 
 # ─── Destroy ────────────────────────────────────────────────────────────────

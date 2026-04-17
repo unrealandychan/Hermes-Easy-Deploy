@@ -89,8 +89,6 @@ gcp_wizard() {
   local tf_dir="${HERMES_DEPLOY_HOME}/gcp"
   mkdir -p "$tf_dir"
   cp -r "${HERMES_DEPLOY_DIR}/terraform/gcp/." "$tf_dir/"
-  cp "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh" "${tf_dir}/bootstrap.sh"
-  cp "${HERMES_DEPLOY_DIR}/config/hermes.yaml.tpl" "${tf_dir}/hermes.yaml.tpl"
 
   cat > "${tf_dir}/terraform.tfvars" <<EOF
 project_id       = "${project_id}"
@@ -99,14 +97,6 @@ zone             = "${zone}"
 machine_type     = "${machine_type}"
 allowed_ssh_cidr = "${allowed_cidr}"
 EOF
-
-  cat > "${tf_dir}/secrets.auto.tfvars" <<EOF
-openrouter_api_key = "${openrouter_key}"
-openai_api_key     = "${openai_key}"
-anthropic_api_key  = "${anthropic_key}"
-gemini_api_key     = "${gemini_key}"
-EOF
-  chmod 600 "${tf_dir}/secrets.auto.tfvars"
 
   config_set "cloud"      "gcp"
   config_set "region"     "$REGION"
@@ -117,8 +107,8 @@ EOF
 
   # ── Enable required GCP APIs ────────────────────────────────────────────
   echo ""
-  spinner "Enabling GCP APIs..." bash -c "
-    gcloud services enable compute.googleapis.com secretmanager.googleapis.com \
+  spinner "Enabling GCP Compute API..." bash -c "
+    gcloud services enable compute.googleapis.com \
       --project '${project_id}' 2>/dev/null || true
   "
 
@@ -144,7 +134,15 @@ EOF
   config_set "public_ip"   "$ip"
   config_set "instance_id" "hermes-instance"
 
-  post_deploy_guide "gcp" "$ip" "hermes-instance" "$zone" "~/.ssh/google_compute_engine"
+  # ── SSH-based installation ─────────────────────────────────────────────────
+  local gcp_ssh_key="$HOME/.ssh/google_compute_engine"
+  ssh_wait   "$ip" "ubuntu" "$gcp_ssh_key"
+  ssh_upload_env "$ip" "ubuntu" "$gcp_ssh_key" \
+    "$openrouter_key" "$openai_key" "$anthropic_key" "$gemini_key"
+  ssh_install "$ip" "ubuntu" "$gcp_ssh_key" \
+    "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh"
+
+  post_deploy_guide "gcp" "$ip" "hermes-instance" "$zone" "$gcp_ssh_key"
 }
 
 # ─── Status ─────────────────────────────────────────────────────────────────
@@ -213,36 +211,31 @@ gcp_logs() {
 
 # ─── Secrets ────────────────────────────────────────────────────────────────
 gcp_secrets() {
-  local project_id
-  project_id=$(config_get "project_id")
+  local ip
+  ip=$(config_get "public_ip")
+  local gcp_ssh_key="$HOME/.ssh/google_compute_engine"
 
-  gum style --bold --foreground 212 "Update API Keys in GCP Secret Manager"
+  gum style --bold --foreground 212 "Update API Keys on the Hermes instance"
   echo ""
 
   local provider
   provider=$(choose_one "Which provider's key?" \
-    "OpenRouter  (hermes-openrouter-api-key)" \
-    "OpenAI      (hermes-openai-api-key)" \
-    "Anthropic   (hermes-anthropic-api-key)" \
-    "Gemini      (hermes-gemini-api-key)")
+    "OpenRouter  (OPENROUTER_API_KEY)" \
+    "OpenAI      (OPENAI_API_KEY)" \
+    "Anthropic   (ANTHROPIC_API_KEY)" \
+    "Gemini      (GEMINI_API_KEY)")
 
-  local secret_name
-  secret_name=$(echo "$provider" | grep -oE '\([^)]+\)' | tr -d '()')
+  local var_name
+  var_name=$(echo "$provider" | grep -oE '\([^)]+\)' | tr -d '()')
   local new_value
-  new_value=$(masked_input "New value for ${secret_name}")
+  new_value=$(masked_input "New value for ${var_name}")
 
   if [[ -z "$new_value" ]]; then
     warn "No value entered. Skipped."
     return
   fi
 
-  # gcloud reads secret data from stdin via --data-file=-
-  echo -n "$new_value" | gcloud secrets versions add "$secret_name" \
-    --data-file=- \
-    --project "$project_id"
-
-  success "Key updated in Secret Manager."
-  warn "To apply: Hermes-Easy-Deploy ssh  →  sudo systemctl restart hermes-gateway"
+  ssh_update_key "$ip" "ubuntu" "$gcp_ssh_key" "$var_name" "$new_value"
 }
 
 # ─── Destroy ────────────────────────────────────────────────────────────────

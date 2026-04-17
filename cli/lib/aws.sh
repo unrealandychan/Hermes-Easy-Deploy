@@ -79,8 +79,6 @@ aws_wizard() {
   local tf_dir="${HERMES_DEPLOY_HOME}/aws"
   mkdir -p "$tf_dir"
   cp -r "${HERMES_DEPLOY_DIR}/terraform/aws/." "$tf_dir/"
-  cp "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh" "${tf_dir}/bootstrap.sh"
-  cp "${HERMES_DEPLOY_DIR}/config/hermes.yaml.tpl" "${tf_dir}/hermes.yaml.tpl"
 
   # Non-secret tfvars
   cat > "${tf_dir}/terraform.tfvars" <<EOF
@@ -89,15 +87,6 @@ instance_type     = "${instance_type}"
 key_name          = "${key_name}"
 allowed_ssh_cidr  = "${allowed_cidr}"
 EOF
-
-  # Sensitive vars — chmod 600, never committed
-  cat > "${tf_dir}/secrets.auto.tfvars" <<EOF
-openrouter_api_key = "${openrouter_key}"
-openai_api_key     = "${openai_key}"
-anthropic_api_key  = "${anthropic_key}"
-gemini_api_key     = "${gemini_key}"
-EOF
-  chmod 600 "${tf_dir}/secrets.auto.tfvars"
 
   # Persist config
   config_set "cloud"        "aws"
@@ -130,6 +119,13 @@ EOF
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "$instance_id"
+
+  # ── SSH-based installation ─────────────────────────────────────────────────
+  ssh_wait   "$ip" "ubuntu" "$ssh_key_path"
+  ssh_upload_env "$ip" "ubuntu" "$ssh_key_path" \
+    "$openrouter_key" "$openai_key" "$anthropic_key" "$gemini_key"
+  ssh_install "$ip" "ubuntu" "$ssh_key_path" \
+    "${HERMES_DEPLOY_DIR}/scripts/bootstrap.sh"
 
   post_deploy_guide "aws" "$ip" "$instance_id" "$REGION" "$ssh_key_path"
 }
@@ -211,39 +207,31 @@ aws_logs() {
 
 # ─── Secrets ────────────────────────────────────────────────────────────────
 aws_secrets() {
-  local region
-  region=$(config_get "region")
+  local ip ssh_key
+  ip=$(config_get "public_ip")
+  ssh_key="$(config_get "ssh_key_path")"
 
-  gum style --bold --foreground 212 "Update API Keys in AWS SSM Parameter Store"
+  gum style --bold --foreground 212 "Update API Keys on the Hermes instance"
   echo ""
 
   local provider
   provider=$(choose_one "Which provider's key?" \
-    "OpenRouter  (/hermes/openrouter_api_key)" \
-    "OpenAI      (/hermes/openai_api_key)" \
-    "Anthropic   (/hermes/anthropic_api_key)" \
-    "Gemini      (/hermes/gemini_api_key)")
+    "OpenRouter  (OPENROUTER_API_KEY)" \
+    "OpenAI      (OPENAI_API_KEY)" \
+    "Anthropic   (ANTHROPIC_API_KEY)" \
+    "Gemini      (GEMINI_API_KEY)")
 
-  local param_name
-  param_name=$(echo "$provider" | grep -oE '/hermes/[^ )]+')
+  local var_name
+  var_name=$(echo "$provider" | grep -oE '\([^)]+\)' | tr -d '()')
   local new_value
-  new_value=$(masked_input "New value for ${param_name}")
+  new_value=$(masked_input "New value for ${var_name}")
 
   if [[ -z "$new_value" ]]; then
     warn "No value entered. Skipped."
     return
   fi
 
-  spinner "Updating ${param_name}..." \
-    aws ssm put-parameter \
-      --name "$param_name" \
-      --value "$new_value" \
-      --type "SecureString" \
-      --overwrite \
-      --region "$region"
-
-  success "Key updated in SSM."
-  warn "To apply: Hermes-Easy-Deploy ssh  →  sudo systemctl restart hermes-gateway"
+  ssh_update_key "$ip" "ubuntu" "$ssh_key" "$var_name" "$new_value"
 }
 
 # ─── Destroy ────────────────────────────────────────────────────────────────

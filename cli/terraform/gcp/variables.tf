@@ -25,31 +25,3 @@ variable "allowed_ssh_cidr" {
   description = "CIDR allowed for SSH (port 22) and gateway (port 8080)"
   type        = string
 }
-
-variable "openrouter_api_key" {
-  description = "OpenRouter API key — stored in Secret Manager as hermes-openrouter-api-key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "openai_api_key" {
-  description = "OpenAI API key — stored in Secret Manager as hermes-openai-api-key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "anthropic_api_key" {
-  description = "Anthropic (Claude) API key — stored in Secret Manager as hermes-anthropic-api-key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "gemini_api_key" {
-  description = "Google Gemini API key — stored in Secret Manager as hermes-gemini-api-key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}

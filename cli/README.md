@@ -191,9 +191,8 @@ Hermes-Easy-Deploy secrets
 ## Security Model
 
 - **Firewall / NSG / Security Group**: SSH (22) and gateway (8080) are restricted to your current IP only. The ports are **not** open to the public internet.
-- **Secrets**: API keys are stored as encrypted secrets in the cloud vault (SSM SecureString / Key Vault / Secret Manager). They are never present in Terraform state, `user_data`, or `custom_data`.
-- **IAM least-privilege**: The instance role/identity is granted only `GetParameter` (AWS), `Get/List` secret (Azure), or `secretAccessor` (GCP) — nothing else.
-- **`secrets.auto.tfvars`**: Local file created during deploy, `chmod 600`, never committed. Delete it after deployment if desired.
+- **Secrets**: API keys are delivered directly to the VM over SSH and written to `~/.hermes/.env` (chmod 600). They are never stored in Terraform state, cloud vaults, or instance metadata.
+- **SSH transport**: Key delivery and install use your existing SSH key pair — no additional cloud credentials or IAM roles required for secret access.
 - **Docker sandbox**: Hermes terminal backend runs in a container with 1 vCPU / 5 GB RAM / 50 GB disk limits.
 
 ---
