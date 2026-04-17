@@ -127,7 +127,9 @@ EOF
     terraform -chdir="$tf_dir" apply -auto-approve -no-color
 
   local ip
-  ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null || echo "unknown")
+  ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null)
+  ip="${ip//$'\n'/}"
+  [[ -z "$ip" ]] && ip="unknown"
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "hermes-instance"

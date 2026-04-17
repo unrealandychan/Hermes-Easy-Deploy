@@ -3,13 +3,10 @@
 
 CONFIG_FILE="${HERMES_DEPLOY_HOME}/config"
 
-# Load all saved config values as shell variables (sourced)
+# Load saved config — sets CLOUD and REGION globals without sourcing the file
 config_load() {
   if [[ -f "$CONFIG_FILE" ]]; then
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
-    # Propagate globals the main script cares about
-    [[ -z "${CLOUD:-}" ]] && CLOUD="$(config_get cloud 2>/dev/null || true)"
+    [[ -z "${CLOUD:-}"  ]] && CLOUD="$(config_get cloud 2>/dev/null || true)"
     [[ -z "${REGION:-}" ]] && REGION="$(config_get region 2>/dev/null || true)"
   fi
 }

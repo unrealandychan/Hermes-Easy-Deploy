@@ -118,10 +118,14 @@ EOF
   spinner "Applying (this takes ~3 min)..." \
     terraform -chdir="$tf_dir" apply -auto-approve -no-color
 
-  # Capture outputs
+  # Capture outputs — grep the state file to avoid multi-line terraform messages
   local ip instance_id
-  ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null || echo "unknown")
-  instance_id=$(terraform -chdir="$tf_dir" output -raw instance_id 2>/dev/null || echo "unknown")
+  ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null)
+  ip="${ip//$'\n'/}"
+  [[ -z "$ip" ]] && ip="unknown"
+  instance_id=$(terraform -chdir="$tf_dir" output -raw instance_id 2>/dev/null)
+  instance_id="${instance_id//$'\n'/}"
+  [[ -z "$instance_id" ]] && instance_id="unknown"
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "$instance_id"

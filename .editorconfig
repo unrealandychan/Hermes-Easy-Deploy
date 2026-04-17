@@ -1,0 +1,63 @@
+# ──────────────────────────────────────────────────────────────────────────────
+#  Shared EditorConfig — language-agnostic baseline
+#  Drop in repository root. All editors that support EditorConfig pick it up.
+#  https://editorconfig.org
+# ──────────────────────────────────────────────────────────────────────────────
+
+root = true
+
+# ── Universal defaults ────────────────────────────────────────────────────────
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 100
+
+# ── Python ────────────────────────────────────────────────────────────────────
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# ── Java / Kotlin ─────────────────────────────────────────────────────────────
+[*.{java,kt,kts}]
+indent_size = 4
+max_line_length = 120
+
+# ── C# ────────────────────────────────────────────────────────────────────────
+[*.cs]
+indent_size = 4
+max_line_length = 120
+
+# ── Go ────────────────────────────────────────────────────────────────────────
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# ── TypeScript / JavaScript ───────────────────────────────────────────────────
+[*.{ts,tsx,js,jsx,mjs,cjs}]
+indent_size = 2
+max_line_length = 100
+
+# ── Markdown ──────────────────────────────────────────────────────────────────
+[*.{md,mdx,mdc}]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# ── YAML ──────────────────────────────────────────────────────────────────────
+[*.{yml,yaml}]
+indent_size = 2
+
+# ── JSON ──────────────────────────────────────────────────────────────────────
+[*.{json,jsonc}]
+indent_size = 2
+
+# ── Shell ─────────────────────────────────────────────────────────────────────
+[*.{sh,bash,zsh}]
+indent_size = 2
+
+# ── Makefiles (must use tabs) ─────────────────────────────────────────────────
+[Makefile]
+indent_style = tab

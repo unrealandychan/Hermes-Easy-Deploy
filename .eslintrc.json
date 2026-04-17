@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json.schemastore.org/eslintrc",
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "unicorn",
+    "sonarjs"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "plugin:unicorn/recommended",
+    "plugin:sonarjs/recommended"
+  ],
+  "rules": {
+    // ── Meaningful names ──────────────────────────────────────────
+    "id-length": ["warn", { "min": 2, "exceptions": ["i", "j", "k", "_"] }],
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      { "selector": "variable", "format": ["camelCase", "UPPER_CASE", "PascalCase"] },
+      { "selector": "function", "format": ["camelCase", "PascalCase"] },
+      { "selector": "class", "format": ["PascalCase"] },
+      { "selector": "interface", "format": ["PascalCase"] },
+      { "selector": "typeAlias", "format": ["PascalCase"] },
+      { "selector": "enum", "format": ["PascalCase"] },
+      { "selector": "enumMember", "format": ["UPPER_CASE"] }
+    ],
+
+    // ── Single responsibility / complexity ────────────────────────
+    "max-lines-per-function": ["warn", { "max": 40, "skipBlankLines": true, "skipComments": true }],
+    "max-params": ["warn", { "max": 4 }],
+    "complexity": ["warn", 10],
+    "max-depth": ["warn", 3],
+
+    // ── No magic numbers ─────────────────────────────────────────
+    "@typescript-eslint/no-magic-numbers": [
+      "warn",
+      { "ignore": [0, 1, -1], "ignoreEnums": true, "ignoreReadonlyClassProperties": true }
+    ],
+
+    // ── DDD — no `any`, use domain types ─────────────────────────
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unsafe-assignment": "error",
+    "@typescript-eslint/no-unsafe-call": "error",
+    "@typescript-eslint/no-unsafe-member-access": "error",
+    "@typescript-eslint/no-unsafe-return": "error",
+
+    // ── DDD — enforce import boundaries ──────────────────────────
+    "import/no-cycle": ["error", { "maxDepth": 3 }],
+    "import/no-restricted-paths": [
+      "warn",
+      {
+        "zones": [
+          {
+            "target": "./src/domain",
+            "from": "./src/infrastructure",
+            "message": "Domain must not import from infrastructure (DDD: dependency inversion)"
+          },
+          {
+            "target": "./src/domain",
+            "from": "./src/application",
+            "message": "Domain must not import from application layer"
+          }
+        ]
+      }
+    ],
+
+    // ── Duplication (SonarJS) ─────────────────────────────────────
+    "sonarjs/no-duplicate-string": ["warn", { "threshold": 3 }],
+    "sonarjs/cognitive-complexity": ["warn", 12],
+
+    // ── Unicorn (readability) ─────────────────────────────────────
+    "unicorn/prevent-abbreviations": [
+      "warn",
+      {
+        "replacements": {
+          "res": { "response": true },
+          "req": { "request": true },
+          "ctx": { "context": true },
+          "e": { "error": true, "event": true }
+        }
+      }
+    ],
+    "unicorn/no-array-for-each": "warn",
+    "unicorn/no-nested-ternary": "error",
+    "unicorn/prefer-ternary": "warn",
+
+    // ── Error handling ────────────────────────────────────────────
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/promise-function-async": "error",
+    "no-console": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-magic-numbers": "off",
+        "max-lines-per-function": "off"
+      }
+    }
+  ]
+}
