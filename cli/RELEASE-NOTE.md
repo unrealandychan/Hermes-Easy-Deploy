@@ -12,6 +12,81 @@ _Changes staged for the next release will appear here._
 
 ---
 
+## [1.0.1] — 2026-04-17
+
+### Overview
+
+Replaces the cloud-init / secret-store installation approach with a direct
+SSH-based flow. Users now see every installation line printed live in their
+terminal. Cloud secret stores (AWS SSM Parameter Store, Azure Key Vault, GCP
+Secret Manager) are no longer required.
+
+### Changed
+
+#### Installation flow
+- **SSH-based install** — after `terraform apply` the CLI waits for SSH,
+  uploads API keys directly to `~/.hermes/.env` (chmod 600) over the SSH
+  tunnel, then streams `scripts/bootstrap.sh` execution in real-time so
+  users see every step as it happens.
+- No more silent background `cloud-init` failures; all output is visible in
+  the terminal during deployment.
+
+#### `scripts/bootstrap.sh`
+- Removed Terraform `templatefile` variable placeholders (`${HERMES_CLOUD}`,
+  `${AWS_REGION}`, `${SSM_PREFIX}`, `${AZURE_KV_NAME}`, `${GCP_PROJECT}`).
+- Removed Step 2 (cloud CLI installation: AWS CLI, Azure CLI).
+- Removed Step 3 (secret fetch from SSM / Key Vault / Secret Manager).
+- Script now expects `~/.hermes/.env` to already exist (uploaded by the CLI).
+- Renumbered to 4 steps: system packages → Docker → Hermes Agent → systemd
+  service.
+- Log file unchanged: `/var/log/hermes-bootstrap.log`.
+
+#### New `lib/ssh.sh`
+Four reusable SSH helpers called after every `terraform apply`:
+- `ssh_wait` — retry loop (up to 5 min) until SSH is ready.
+- `ssh_upload_env` — pipes API keys to `~/.hermes/.env` via stdin (values
+  never embedded in the remote command string).
+- `ssh_install` — runs `bootstrap.sh` via `sudo bash -s` with live terminal
+  output (no spinner wrapper).
+- `ssh_update_key` — updates a single key in `.env` via stdin + remote
+  `read`, then restarts `hermes-gateway`.
+
+#### Terraform stacks — removed cloud secret stores
+| Stack | Removed |
+|---|---|
+| `terraform/aws/` | `ssm.tf` deleted; SSM read IAM policy removed; `user_data` + `lifecycle.ignore_changes` removed from `aws_instance`; four API key variables removed |
+| `terraform/azure/` | `keyvault.tf` deleted; `custom_data`, `lifecycle`, Managed Identity removed from VM; `key_vault_name` + four API key variables removed |
+| `terraform/gcp/` | `secretmanager.tf` deleted; `startup-script` metadata, `service_account` block, and `google_service_account` resource removed; four API key variables removed |
+
+Note: AWS IAM role and `AmazonSSMManagedInstanceCore` attachment are **kept**
+so AWS Session Manager shells still work without an open SSH port.
+
+#### `lib/aws.sh` / `lib/azure.sh` / `lib/gcp.sh`
+- Removed `secrets.auto.tfvars` generation.
+- Each cloud wizard now calls `ssh_wait → ssh_upload_env → ssh_install` after
+  `terraform apply`.
+- `*_secrets` commands rewritten: update `~/.hermes/.env` on the instance via
+  `ssh_update_key` instead of cloud vault CLIs.
+- `lib/azure.sh`: removed `key_vault_name` generation and
+  `config_set "key_vault_name"`.
+- `lib/gcp.sh`: removed `gcloud services enable secretmanager.googleapis.com`.
+
+#### `lib/ui.sh` — `post_deploy_guide`
+- Removed cloud-init / cloud-vault security notes.
+- Replaced first-boot checklist with direct verification steps (install
+  already completed during deploy; no wait needed).
+- Updated success banner to say "deployed and installed successfully".
+
+### Security
+
+- API keys are delivered exclusively over the already-established SSH tunnel.
+- Keys are written to `~/.hermes/.env` (chmod 600) on the VM and are **not**
+  stored in Terraform state, cloud vaults, or instance metadata.
+- Remote command strings never contain key values — all secrets pass through
+  `stdin` pipes.
+
+---
+
 ## [1.0.0] — 2026-04-14
 
 ### Overview
@@ -118,8 +193,8 @@ with a single command through a beautiful `gum`-powered TUI.
 
 ### Security
 
-- API keys never appear in Terraform state, `user_data`, `custom_data`, or instance metadata
-- `secrets.auto.tfvars` is `chmod 600` and gitignored
+- API keys stored in cloud vault (SSM / Key Vault / Secret Manager); superseded in v1.0.1 by SSH-based delivery
+- `secrets.auto.tfvars` is `chmod 600` and gitignored (removed in v1.0.1)
 - All inbound ports restricted to deployer IP at deploy time
 - IAM roles follow least-privilege principle (read-only on secrets, SSM core for management only)
 - Hermes runs in a Docker container sandbox (no direct host access from agent tools)

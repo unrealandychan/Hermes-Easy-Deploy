@@ -11,7 +11,7 @@ Built with [Charm's `gum`](https://github.com/charmbracelet/gum) for a fully int
 - **Interactive wizard** — step-by-step prompts for every option; flags can skip any step for scripted use
 - **Three clouds** — AWS (EC2), Azure (VM), GCP (Compute Engine) with dedicated Terraform stacks per provider
 - **Four LLM providers** — OpenRouter, OpenAI, Anthropic (Claude), Google Gemini; supply any combination
-- **Zero secrets in infrastructure code** — keys stored exclusively in AWS SSM, Azure Key Vault, or GCP Secret Manager; pulled at boot via IAM/Managed Identity
+- **Zero secrets in infrastructure code** — API keys delivered over SSH directly to the VM's `~/.hermes/.env` (chmod 600); never stored in Terraform state, cloud vaults, or instance metadata
 - **Sandboxed execution** — Hermes runs in Docker with CPU/RAM/disk limits out of the box
 - **Auto-start on reboot** — `hermes-gateway` registered as a `systemd` service
 - **Post-deploy access guide** — printed live after every deployment with real IPs and instance IDs
@@ -66,7 +66,7 @@ bash install.sh
 
 ```bash
 Hermes-Easy-Deploy version
-# Hermes-Easy-Deploy v1.0.0
+# Hermes-Easy-Deploy v1.0.1
 ```
 
 ---
@@ -90,7 +90,7 @@ That's it. The wizard walks you through cloud selection → region → instance 
 | `Hermes-Easy-Deploy status` | Show instance IP, state, and resource IDs |
 | `Hermes-Easy-Deploy ssh` | Open a shell on the deployed instance |
 | `Hermes-Easy-Deploy logs` | Stream live `hermes-gateway` logs |
-| `Hermes-Easy-Deploy secrets` | Rotate or add API keys in the cloud vault |
+| `Hermes-Easy-Deploy secrets` | Rotate or add API keys on the running instance |
 | `Hermes-Easy-Deploy destroy` | Tear down all resources (gated by confirmation prompt) |
 | `Hermes-Easy-Deploy version` | Print CLI version |
 | `Hermes-Easy-Deploy help` | Show usage |
@@ -113,7 +113,7 @@ That's it. The wizard walks you through cloud selection → region → instance 
 $ Hermes-Easy-Deploy
 
 ╔══════════════════════════════════════╗
-║   ⚡  HERMES DEPLOY  v1.0.0          ║
+║   ⚡  HERMES DEPLOY  v1.0.1          ║
 ║   Deploy Hermes Agent to AWS · Azure · GCP ║
 ╚══════════════════════════════════════╝
 
@@ -170,7 +170,7 @@ $ Hermes-Easy-Deploy
 
 ## API Key Providers
 
-At least one key is required. All others are optional. Keys are never stored on disk in plaintext — they go directly into the cloud secret store and are fetched by the instance at boot via IAM role / Managed Identity / Service Account.
+At least one key is required. All others are optional. Keys are delivered directly to the VM over SSH (written to `~/.hermes/.env`, chmod 600). They are never stored in Terraform state, cloud vaults, or instance metadata.
 
 | Provider | Environment variable | Notes |
 |---|---|---|
@@ -191,9 +191,8 @@ Hermes-Easy-Deploy secrets
 ## Security Model
 
 - **Firewall / NSG / Security Group**: SSH (22) and gateway (8080) are restricted to your current IP only. The ports are **not** open to the public internet.
-- **Secrets**: API keys are stored as encrypted secrets in the cloud vault (SSM SecureString / Key Vault / Secret Manager). They are never present in Terraform state, `user_data`, or `custom_data`.
-- **IAM least-privilege**: The instance role/identity is granted only `GetParameter` (AWS), `Get/List` secret (Azure), or `secretAccessor` (GCP) — nothing else.
-- **`secrets.auto.tfvars`**: Local file created during deploy, `chmod 600`, never committed. Delete it after deployment if desired.
+- **Secrets**: API keys are delivered directly to the VM over SSH and written to `~/.hermes/.env` (chmod 600). They are never stored in Terraform state, cloud vaults, or instance metadata.
+- **SSH transport**: Key delivery and install use your existing SSH key pair — no additional cloud credentials or IAM roles required for secret access.
 - **Docker sandbox**: Hermes terminal backend runs in a container with 1 vCPU / 5 GB RAM / 50 GB disk limits.
 
 ---
@@ -208,13 +207,13 @@ The project is designed so that adding a new cloud, region, instance type, or LL
 2. **`lib/<cloud>.sh`** — create following the pattern of `lib/aws.sh`
 3. **`Hermes-Easy-Deploy`** — add a `source lib/<cloud>.sh` line and a `case` branch in every command function
 4. **`terraform/<cloud>/`** — create the Terraform stack
-5. **`scripts/bootstrap.sh`** — add a `case` branch for secret-pull logic
+5. **`scripts/bootstrap.sh`** — no changes needed; it is cloud-agnostic
 
 ### Add a new LLM provider
 
 1. **`lib/enums.sh`** — append the provider key to `API_PROVIDER_ORDER` and add entries in the four `API_PROVIDER_*` associative arrays
-2. **`scripts/bootstrap.sh`** — add a `pull_*` call in the cloud-specific `case` block
-3. The Terraform SSM/Key Vault/Secret Manager resources are count-conditional — they'll pick up new variables automatically if you add a matching `variable` block
+2. **`lib/ssh.sh` / `ssh_upload_env`** — add the new env var to the `.env` file written to the instance
+3. **`scripts/bootstrap.sh`** — no changes needed; bootstrap reads all keys from `~/.hermes/.env` automatically
 
 ### Add a new region or instance type
 
@@ -296,7 +295,7 @@ brew install gum   # macOS
 
 **`hermes doctor` fails after deploy**
 
-The bootstrap script runs in the background on first boot. Give it ~3 min:
+The bootstrap ran live over SSH during deployment — check the log for errors:
 
 ```bash
 sudo tail -f /var/log/hermes-bootstrap.log
@@ -304,14 +303,12 @@ sudo tail -f /var/log/hermes-bootstrap.log
 
 **API keys missing from `.hermes/.env`**
 
-The instance queries the cloud vault via its IAM role. If the role was not yet propagated when bootstrap ran:
+The keys are uploaded over SSH during deployment. If the file is missing, re-run the secrets command:
 
 ```bash
+Hermes-Easy-Deploy secrets
+# then restart the service on the instance:
 sudo systemctl restart hermes-gateway
-# If still empty, verify IAM permissions:
-# AWS:   aws iam simulate-principal-policy ...
-# Azure: az role assignment list --assignee <principal-id>
-# GCP:   gcloud projects get-iam-policy <project> | grep hermes
 ```
 
 **Port 8080 not reachable**
@@ -336,17 +333,18 @@ Hermes-Easy-Deploy/
 ├── lib/
 │   ├── enums.sh               All enum definitions + validation helpers  ← extend here
 │   ├── ui.sh                  gum wrappers, banner, post-deploy guide
+│   ├── ssh.sh                 SSH helpers: wait, upload-env, install, update-key
 │   ├── preflight.sh           Dependency + auth checks
 │   ├── config.sh              Persist/read ~/.Hermes-Easy-Deploy/config
 │   ├── aws.sh                 AWS wizard + management commands
 │   ├── azure.sh               Azure wizard + management commands
 │   └── gcp.sh                 GCP wizard + management commands
 ├── terraform/
-│   ├── aws/                   EC2 + VPC + SSM + IAM (6 files)
-│   ├── azure/                 VM + VNet + NSG + Key Vault (5 files)
-│   └── gcp/                   Compute Engine + Firewall + Secret Manager (5 files)
+│   ├── aws/                   EC2 + VPC + IAM (no SSM — 4 files)
+│   ├── azure/                 VM + VNet + NSG (no Key Vault — 4 files)
+│   └── gcp/                   Compute Engine + Firewall (no Secret Manager — 4 files)
 ├── scripts/
-│   ├── bootstrap.sh           Cloud-init: install Hermes, pull secrets, register systemd
+│   ├── bootstrap.sh           SSH-run installer: system packages → Docker → Hermes → systemd
 │   └── configure.sh           Post-deploy health-check (run on instance)
 └── config/
     └── hermes.yaml.tpl        Hermes configuration template

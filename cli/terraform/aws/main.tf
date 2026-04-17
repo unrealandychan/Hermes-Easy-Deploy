@@ -42,21 +42,6 @@ resource "aws_instance" "hermes" {
     delete_on_termination = true
   }
 
-  # bootstrap.sh is a Terraform templatefile — cloud values injected at plan time.
-  # The instance pulls API keys from SSM at boot via its IAM role; no secrets in user_data.
-  user_data = base64encode(templatefile("${path.module}/bootstrap.sh", {
-    HERMES_CLOUD  = "aws"
-    AWS_REGION    = var.aws_region
-    SSM_PREFIX    = "/hermes"
-    AZURE_KV_NAME = ""
-    GCP_PROJECT   = ""
-  }))
-
-  # Prevent user_data churn from forcing instance replacement on re-plan
-  lifecycle {
-    ignore_changes = [user_data]
-  }
-
   tags = {
     Name    = "hermes-agent"
     Project = "Hermes-Easy-Deploy"

@@ -160,7 +160,7 @@ post_deploy_guide() {
     --border-foreground 46 \
     --padding "1 4" \
     --bold \
-    "$(gum style --foreground 46 '✓  Hermes Agent deployed successfully')"
+    "$(gum style --foreground 46 '✓  Hermes Agent deployed and installed successfully')"
 
   echo ""
   summary_table \
@@ -198,7 +198,6 @@ post_deploy_guide() {
   gum style --bold --foreground 255 "  3.  Hermes Gateway  (web & API access)"
   gum style --foreground 245        "      http://${ip}:8080"
   gum style --foreground 245        "      Port 8080 is restricted to your current IP only."
-  gum style --foreground 245        "      Open in browser once the instance finishes booting (~2 min)."
   echo ""
 
   gum style --bold --foreground 255 "  4.  Quick commands"
@@ -209,24 +208,21 @@ post_deploy_guide() {
   gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy destroy')   tear it all down"
   echo ""
 
-  # ── First boot checklist ───────────────────────────────────────────────
-  divider "FIRST BOOT CHECKLIST  (~2 min after deploy)"
+  # ── Quick verification ─────────────────────────────────────────────────
+  divider "VERIFY YOUR DEPLOYMENT"
   echo ""
-  gum style --foreground 245 "  a)  Verify Hermes installed correctly"
+  gum style --foreground 245 "  a)  Check the systemd gateway service is running"
   gum style --foreground 245 "      Hermes-Easy-Deploy ssh"
-  gum style --foreground 245 "      \$ hermes doctor"
-  echo ""
-  gum style --foreground 245 "  b)  Check the systemd gateway service is running"
   gum style --foreground 245 "      \$ systemctl status hermes-gateway"
   echo ""
-  gum style --foreground 245 "  c)  Confirm your API keys were loaded"
-  gum style --foreground 245 "      \$ cat ~/.hermes/.env"
+  gum style --foreground 245 "  b)  Run a quick health check"
+  gum style --foreground 245 "      \$ hermes doctor"
   echo ""
-  gum style --foreground 245 "  d)  Open the gateway in your browser"
+  gum style --foreground 245 "  c)  Open the gateway in your browser"
   gum style --foreground 245 "      http://${ip}:8080"
   echo ""
-  gum style --foreground 245 "  e)  If the gateway doesn't respond after 3 min, check cloud-init logs"
-  gum style --foreground 245 "      \$ sudo tail -f /var/log/cloud-init-output.log"
+  gum style --foreground 245 "  d)  View live install log if you need to diagnose issues"
+  gum style --foreground 245 "      \$ sudo tail -f /var/log/hermes-bootstrap.log"
   echo ""
 
   # ── Security notes ─────────────────────────────────────────────────────
@@ -236,21 +232,8 @@ post_deploy_guide() {
   gum style --foreground 245 "     to your current IP only. If your IP changes, re-run:"
   gum style --foreground 245 "     $(gum style --foreground 212 'Hermes-Easy-Deploy deploy') and update the firewall rule."
   echo ""
-
-  case "$cloud" in
-    aws)
-      gum style --foreground 245 "  •  API keys are stored in AWS SSM Parameter Store (SecureString)."
-      gum style --foreground 245 "     The instance reads them via IAM role at boot — no keys in user_data."
-      ;;
-    azure)
-      gum style --foreground 245 "  •  API keys are stored in Azure Key Vault."
-      gum style --foreground 245 "     The VM reads them via Managed Identity at boot — no keys in user_data."
-      ;;
-    gcp)
-      gum style --foreground 245 "  •  API keys are stored in GCP Secret Manager."
-      gum style --foreground 245 "     The VM reads them via Service Account at boot — no keys in metadata."
-      ;;
-  esac
+  gum style --foreground 245 "  •  API keys are stored in ~/.hermes/.env on the VM (chmod 600)."
+  gum style --foreground 245 "     They were delivered over SSH and are not stored in Terraform state."
   echo ""
   gum style --foreground 245 "  •  Do NOT open port 8080 to 0.0.0.0/0 unless you add"
   gum style --foreground 245 "     authentication (e.g. a reverse proxy) in front of the gateway."

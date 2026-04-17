@@ -4,7 +4,7 @@
 #    or: bash install.sh  (from a local clone)
 set -euo pipefail
 
-HERMES_DEPLOY_VERSION="1.0.0"
+HERMES_DEPLOY_VERSION="1.0.1"
 INSTALL_BIN="/usr/local/bin"
 INSTALL_LIB="/usr/local/lib/Hermes-Easy-Deploy"
 

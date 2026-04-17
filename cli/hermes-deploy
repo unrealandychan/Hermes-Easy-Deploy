@@ -42,6 +42,8 @@ source "${HERMES_DEPLOY_DIR}/lib/ui.sh"
 source "${HERMES_DEPLOY_DIR}/lib/preflight.sh"
 # shellcheck source=lib/config.sh
 source "${HERMES_DEPLOY_DIR}/lib/config.sh"
+# shellcheck source=lib/ssh.sh
+source "${HERMES_DEPLOY_DIR}/lib/ssh.sh"
 # shellcheck source=lib/aws.sh
 source "${HERMES_DEPLOY_DIR}/lib/aws.sh"
 # shellcheck source=lib/azure.sh
