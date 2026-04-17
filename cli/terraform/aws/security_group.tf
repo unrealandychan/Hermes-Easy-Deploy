@@ -1,6 +1,6 @@
 resource "aws_security_group" "hermes" {
   name        = "hermes-sg"
-  description = "Hermes Agent — allow SSH and gateway only from deployer IP"
+  description = "Hermes Agent - allow SSH and gateway only from deployer IP"
 
   ingress {
     description = "SSH from deployer IP"

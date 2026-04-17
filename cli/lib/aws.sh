@@ -88,6 +88,14 @@ key_name          = "${key_name}"
 allowed_ssh_cidr  = "${allowed_cidr}"
 EOF
 
+  # API key tfvars (auto-loaded by Terraform, kept out of terraform.tfvars)
+  cat > "${tf_dir}/secrets.auto.tfvars" <<EOF
+openrouter_api_key = "${openrouter_key}"
+openai_api_key     = "${openai_key}"
+anthropic_api_key  = "${anthropic_key}"
+gemini_api_key     = "${gemini_key}"
+EOF
+
   # Persist config
   config_set "cloud"        "aws"
   config_set "region"       "$REGION"
@@ -106,11 +114,9 @@ EOF
   fi
 
   spinner "Initializing Terraform..."       \
-    terraform -chdir="$tf_dir" init -upgrade -no-color
-  spinner "Planning infrastructure..."      \
-    terraform -chdir="$tf_dir" plan -out="${tf_dir}/tfplan" -no-color
+    terraform -chdir="$tf_dir" init -no-color
   spinner "Applying (this takes ~3 min)..." \
-    terraform -chdir="$tf_dir" apply "${tf_dir}/tfplan" -no-color
+    terraform -chdir="$tf_dir" apply -auto-approve -no-color
 
   # Capture outputs
   local ip instance_id

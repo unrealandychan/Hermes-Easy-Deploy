@@ -37,13 +37,24 @@ step_header() {
 
 # ─── Spinner ────────────────────────────────────────────────────────────────
 # spinner "message" cmd [args...]
+# On failure, the full command output is printed for debugging.
 spinner() {
   local title="$1"; shift
-  gum spin \
+  local log_file
+  log_file=$(mktemp /tmp/hermes-deploy-XXXXXX.log)
+  if ! HERMES_LOG="$log_file" gum spin \
     --spinner dot \
     --spinner.foreground 212 \
     --title "  $title" \
-    -- "$@"
+    -- bash -c '"$@" >"$HERMES_LOG" 2>&1' _ "$@"; then
+    local exit_code
+    exit_code=$?
+    error "Command failed (exit ${exit_code}). Full output:"
+    cat "$log_file" >&2
+    rm -f "$log_file"
+    return "$exit_code"
+  fi
+  rm -f "$log_file"
 }
 
 # ─── Log levels ─────────────────────────────────────────────────────────────

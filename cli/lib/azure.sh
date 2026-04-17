@@ -118,11 +118,9 @@ EOF
   fi
 
   spinner "Initializing Terraform..."       \
-    terraform -chdir="$tf_dir" init -upgrade -no-color
-  spinner "Planning infrastructure..."      \
-    terraform -chdir="$tf_dir" plan -out="${tf_dir}/tfplan" -no-color
+    terraform -chdir="$tf_dir" init -no-color
   spinner "Applying (this takes ~5 min)..." \
-    terraform -chdir="$tf_dir" apply "${tf_dir}/tfplan" -no-color
+    terraform -chdir="$tf_dir" apply -auto-approve -no-color
 
   local ip instance_id
   ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null || echo "unknown")

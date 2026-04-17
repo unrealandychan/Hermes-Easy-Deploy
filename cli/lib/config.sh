@@ -27,7 +27,8 @@ config_get() {
 # Write / overwrite a key=value pair in the config file
 config_set() {
   local key="$1"
-  local value="$2"
+  # Strip all newlines from the value so sed patterns are never broken
+  local value="${2//$'\n'/}"
   mkdir -p "${HERMES_DEPLOY_HOME}"
   touch "$CONFIG_FILE"
 
