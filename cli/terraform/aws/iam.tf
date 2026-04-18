@@ -14,7 +14,7 @@ resource "aws_iam_role" "hermes" {
   assume_role_policy = data.aws_iam_policy_document.hermes_assume_role.json
 
   tags = {
-    Project = "Hermes-Easy-Deploy"
+    Project = "Hermes-Agent-Cloud"
   }
 }
 

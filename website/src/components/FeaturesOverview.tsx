@@ -34,7 +34,7 @@ export default function FeaturesOverview() {
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
         <div className="text-center mb-14">
-          <span className="badge badge-amber mb-4">Why Hermes Easy Deploy</span>
+          <span className="badge badge-amber mb-4">Why Hermes Agent Cloud</span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
             Everything you need.{" "}
             <span className="gradient-text">Nothing you don&apos;t.</span>

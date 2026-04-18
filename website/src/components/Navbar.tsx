@@ -13,8 +13,8 @@ export default function Navbar() {
             <Zap size={15} color="#000" fill="#000" />
           </span>
           <span className="text-white">Hermes&#160;</span>
-          <span style={{ color: "var(--amber)" }}>Easy</span>
-          <span className="text-white">&#160;Deploy</span>
+          <span style={{ color: "var(--amber)" }}>Agent</span>
+          <span className="text-white">&#160;Cloud</span>
         </Link>
 
         {/* Nav links */}
@@ -29,7 +29,7 @@ export default function Navbar() {
 
         {/* CTA */}
         <a
-          href="https://github.com/unrealandychan/Hermes-Easy-Deploy"
+          href="https://github.com/unrealandychan/Hermes-Agent-Cloud"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium border transition-all hover:border-[#f59e0b]/50 hover:text-white"

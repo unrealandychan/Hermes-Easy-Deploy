@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ui.sh — All TUI helpers for Hermes-Easy-Deploy (requires gum by Charm)
+# ui.sh — All TUI helpers for Hermes Agent Cloud (requires gum by Charm)
 
 # ─── ANSI fallbacks (used before gum is confirmed available) ────────────────
 RED='\033[0;31m'
@@ -17,7 +17,7 @@ hermes_banner() {
     --border-foreground 212 \
     --padding "1 6" \
     --align center \
-    "$(gum style --foreground 212 --bold '⚡  HERMES DEPLOY') $(gum style --foreground 245 "v${HERMES_DEPLOY_VERSION}")" \
+    "$(gum style --foreground 212 --bold '⚡  HERMES AGENT CLOUD') $(gum style --foreground 245 "v${HERMES_DEPLOY_VERSION}")" \
     "$(gum style --foreground 245 'Deploy Hermes Agent to AWS · Azure · GCP')"
   echo ""
 }
@@ -186,7 +186,7 @@ post_deploy_guide() {
 
   gum style --bold --foreground 255 "  1.  Direct SSH (key pair)"
   gum style --foreground 245        "      ssh -i ${ssh_key} ${ssh_user}@${ip}"
-  gum style --foreground 245        "      Shortcut: $(gum style --foreground 212 'Hermes-Easy-Deploy ssh')"
+  gum style --foreground 245        "      Shortcut: $(gum style --foreground 212 'hermes-agent-cloud ssh')"
   echo ""
 
   gum style --bold --foreground 255 "  2.  Cloud-native shell  (no open SSH port needed)"
@@ -212,18 +212,18 @@ post_deploy_guide() {
   echo ""
 
   gum style --bold --foreground 255 "  4.  Quick commands"
-  gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy ssh')       open a shell on the instance"
-  gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy logs')      stream hermes-gateway logs live"
-  gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy status')    show instance IP and health"
-  gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy secrets')   rotate or add API keys"
-  gum style --foreground 245 "      $(gum style --foreground 212 'Hermes-Easy-Deploy destroy')   tear it all down"
+  gum style --foreground 245 "      $(gum style --foreground 212 'hermes-agent-cloud ssh')       open a shell on the instance"
+  gum style --foreground 245 "      $(gum style --foreground 212 'hermes-agent-cloud logs')      stream hermes-gateway logs live"
+  gum style --foreground 245 "      $(gum style --foreground 212 'hermes-agent-cloud status')    show instance IP and health"
+  gum style --foreground 245 "      $(gum style --foreground 212 'hermes-agent-cloud secrets')   rotate or add API keys"
+  gum style --foreground 245 "      $(gum style --foreground 212 'hermes-agent-cloud destroy')   tear it all down"
   echo ""
 
   # ── Quick verification ─────────────────────────────────────────────────
   divider "VERIFY YOUR DEPLOYMENT"
   echo ""
   gum style --foreground 245 "  a)  Check the systemd gateway service is running"
-  gum style --foreground 245 "      Hermes-Easy-Deploy ssh"
+  gum style --foreground 245 "      hermes-agent-cloud ssh"
   gum style --foreground 245 "      \$ systemctl status hermes-gateway"
   echo ""
   gum style --foreground 245 "  b)  Run a quick health check"
@@ -241,7 +241,7 @@ post_deploy_guide() {
   echo ""
   gum style --foreground 245 "  •  SSH (port 22) and gateway (port 8080) are restricted"
   gum style --foreground 245 "     to your current IP only. If your IP changes, re-run:"
-  gum style --foreground 245 "     $(gum style --foreground 212 'Hermes-Easy-Deploy deploy') and update the firewall rule."
+  gum style --foreground 245 "     $(gum style --foreground 212 'hermes-agent-cloud deploy') and update the firewall rule."
   echo ""
   gum style --foreground 245 "  •  API keys are stored in ~/.hermes/.env on the VM (chmod 600)."
   gum style --foreground 245 "     They were delivered over SSH and are not stored in Terraform state."
@@ -253,7 +253,7 @@ post_deploy_guide() {
   # ── Destroy reminder ───────────────────────────────────────────────────
   divider "DESTROY WHEN DONE"
   echo ""
-  gum style --foreground 245 "  Hermes-Easy-Deploy destroy"
+  gum style --foreground 245 "  hermes-agent-cloud destroy"
   gum style --foreground 245 "  You will be asked to confirm before anything is deleted."
   echo ""
 }

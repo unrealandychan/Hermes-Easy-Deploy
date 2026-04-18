@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # configure.sh — Post-deploy verification helper
 # Run this inside the deployed instance after SSH-ing in.
-# Usage:  bash ~/.Hermes-Easy-Deploy/configure.sh
+# Usage:  bash ~/.hermes-agent-cloud/configure.sh
 
 set -euo pipefail
 

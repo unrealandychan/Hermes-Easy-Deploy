@@ -44,6 +44,6 @@ resource "aws_instance" "hermes" {
 
   tags = {
     Name    = "hermes-agent"
-    Project = "Hermes-Easy-Deploy"
+    Project = "Hermes-Agent-Cloud"
   }
 }

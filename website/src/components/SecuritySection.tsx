@@ -5,7 +5,7 @@ const ITEMS = [
   {
     icon: Lock,
     title: "Secrets never leave your cloud",
-    desc: "API keys are written to AWS SSM Parameter Store, Azure Key Vault, or GCP Secret Manager via Terraform — and fetched at boot over IAM-native metadata endpoints. No key ever passes through Hermes Easy Deploy's process.",
+    desc: "API keys are written to AWS SSM Parameter Store, Azure Key Vault, or GCP Secret Manager via Terraform — and fetched at boot over IAM-native metadata endpoints. No key ever passes through Hermes Agent Cloud's process.",
   },
   {
     icon: EyeOff,

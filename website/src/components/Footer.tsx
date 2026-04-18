@@ -11,7 +11,7 @@ export default function Footer() {
               style={{ background: "linear-gradient(135deg,#f59e0b,#a78bfa)" }}>
               <Zap size={13} color="#000" fill="#000" />
             </span>
-            <span className="text-white">Hermes&#160;</span><span style={{ color: "var(--amber)" }}>Easy</span><span className="text-white">&#160;Deploy</span>
+            <span className="text-white">Hermes&#160;</span><span style={{ color: "var(--amber)" }}>Agent</span><span className="text-white">&#160;Cloud</span>
             <span className="text-xs ml-2 px-2 py-0.5 rounded-full border font-normal"
               style={{ borderColor: "var(--border)", color: "var(--text-dim)" }}>
               v1.0.1
@@ -23,7 +23,7 @@ export default function Footer() {
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#install" className="hover:text-white transition-colors">Install</a>
             <a
-              href="https://github.com/unrealandychan/Hermes-Easy-Deploy"
+              href="https://github.com/unrealandychan/Hermes-Agent-Cloud"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:text-white transition-colors"

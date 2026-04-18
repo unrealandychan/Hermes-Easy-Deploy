@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# preflight.sh — Dependency checks for Hermes-Easy-Deploy
+# preflight.sh — Dependency checks for Hermes Agent Cloud
 
 _check_cmd() {
   local name="$1"
@@ -29,7 +29,7 @@ preflight_check() {
 
   if [[ "$PREFLIGHT_PASS" == "false" ]]; then
     echo ""
-    error "Missing dependencies above. Install them then re-run Hermes-Easy-Deploy."
+    error "Missing dependencies above. Install them then re-run hermes-agent-cloud."
     exit 1
   fi
   echo ""

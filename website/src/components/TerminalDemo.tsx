@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 
 const LINES = [
-  { delay: 0,    text: "$ Hermes-Easy-Deploy",                  type: "cmd"   },
+  { delay: 0,    text: "$ hermes-agent-cloud",                  type: "cmd"   },
   { delay: 600,  text: "",                                  type: "blank" },
-  { delay: 700,  text: "  ⚡  Hermes Easy Deploy  v1.0.1", type: "banner"},
+  { delay: 700,  text: "  ⚡  Hermes Agent Cloud  v1.0.1", type: "banner"},
   { delay: 900,  text: "  Deploy the Hermes Agent anywhere.", type: "dim" },
   { delay: 1100, text: "",                                  type: "blank" },
   { delay: 1300, text: "  [1/6] Cloud provider   →  AWS",  type: "step"  },
@@ -20,8 +20,8 @@ const LINES = [
   { delay: 5400, text: "  ✓  Gateway:    http://43.198.77.12:8080", type: "ok" },
   { delay: 5600, text: "",                                  type: "blank" },
   { delay: 5700, text: "  SSH:    ssh ubuntu@43.198.77.12", type: "hint" },
-  { delay: 5900, text: "  Logs:   Hermes-Easy-Deploy logs --cloud aws", type: "hint" },
-  { delay: 6100, text: "  Destroy: Hermes-Easy-Deploy destroy --cloud aws", type: "hint" },
+  { delay: 5900, text: "  Logs:   hermes-agent-cloud logs --cloud aws", type: "hint" },
+  { delay: 6100, text: "  Destroy: hermes-agent-cloud destroy --cloud aws", type: "hint" },
 ];
 
 function colorFor(type: string) {
@@ -63,7 +63,7 @@ export default function TerminalDemo() {
         <span className="w-3 h-3 rounded-full inline-block" style={{ background: "#ff5f57" }} />
         <span className="w-3 h-3 rounded-full inline-block" style={{ background: "#f59e0b" }} />
         <span className="w-3 h-3 rounded-full inline-block" style={{ background: "#28c840" }} />
-        <span className="ml-auto text-xs" style={{ color: "var(--text-dim)" }}>Hermes Easy Deploy — bash</span>
+        <span className="ml-auto text-xs" style={{ color: "var(--text-dim)" }}>Hermes Agent Cloud — bash</span>
       </div>
 
       <div className="terminal-body min-h-[320px]">

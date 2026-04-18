@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# install.sh — One-line installer for Hermes-Easy-Deploy
-# Usage: curl -sSL https://raw.githubusercontent.com/unrealandychan/Hermes-Easy-Deploy/main/cli/install.sh | bash
+# install.sh — One-line installer for Hermes Agent Cloud
+# Usage: curl -sSL https://raw.githubusercontent.com/unrealandychan/Hermes-Agent-Cloud/main/cli/install.sh | bash
 #    or: bash install.sh  (from a local clone)
 set -euo pipefail
 
 HERMES_DEPLOY_VERSION="1.0.1"
 INSTALL_BIN="/usr/local/bin"
-INSTALL_LIB="/usr/local/lib/Hermes-Easy-Deploy"
+INSTALL_LIB="/usr/local/lib/hermes-agent-cloud"
 
 BOLD='\033[1m'
 GREEN='\033[0;32m'
@@ -20,7 +20,7 @@ ARCH="$(uname -m)"
 
 banner() {
   echo ""
-  echo -e "${BOLD}Hermes-Easy-Deploy installer — v${HERMES_DEPLOY_VERSION}${RESET}"
+  echo -e "${BOLD}Hermes Agent Cloud installer — v${HERMES_DEPLOY_VERSION}${RESET}"
   echo -e "${DIM}─────────────────────────────────────────${RESET}"
   echo ""
 }
@@ -46,7 +46,7 @@ install_bash() {
     return
   fi
 
-  info "Installing Bash 4+ (required by Hermes-Easy-Deploy)..."
+  info "Installing Bash 4+ (required by Hermes Agent Cloud)..."
 
   case "$OS" in
     Darwin)
@@ -185,9 +185,9 @@ install_jq() {
   ok "jq installed"
 }
 
-# ── Install Hermes-Easy-Deploy ────────────────────────────────────────────────────
+# ── Install Hermes Agent Cloud ──────────────────────────────────────────────────
 install_hermes_deploy() {
-  info "Installing Hermes-Easy-Deploy v${HERMES_DEPLOY_VERSION}..."
+  info "Installing Hermes Agent Cloud v${HERMES_DEPLOY_VERSION}..."
 
   local src_dir=""
   local main_bin=""
@@ -217,9 +217,9 @@ install_hermes_deploy() {
         src_dir="$candidate_dir"
         main_bin="hermes-deploy"
         break
-      elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+      elif [[ -f "$candidate_dir/hermes-agent-cloud" ]]; then
         src_dir="$candidate_dir"
-        main_bin="Hermes-Easy-Deploy"
+        main_bin="hermes-agent-cloud"
         break
       fi
     done
@@ -233,7 +233,7 @@ install_hermes_deploy() {
     tmp_dir=$(mktemp -d)
     trap "rm -rf $tmp_dir" EXIT
 
-    local archive_url="https://github.com/unrealandychan/Hermes-Easy-Deploy/archive/refs/tags/v${HERMES_DEPLOY_VERSION}.tar.gz"
+    local archive_url="https://github.com/unrealandychan/Hermes-Agent-Cloud/archive/refs/tags/v${HERMES_DEPLOY_VERSION}.tar.gz"
     info "Downloading from ${archive_url}..."
     curl -fsSL "$archive_url" | tar -xz -C "$tmp_dir" --strip-components=1
 
@@ -242,9 +242,9 @@ install_hermes_deploy() {
         src_dir="$candidate_dir"
         main_bin="hermes-deploy"
         break
-      elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+      elif [[ -f "$candidate_dir/hermes-agent-cloud" ]]; then
         src_dir="$candidate_dir"
-        main_bin="Hermes-Easy-Deploy"
+        main_bin="hermes-agent-cloud"
         break
       fi
     done
@@ -256,7 +256,7 @@ install_hermes_deploy() {
     fi
 
     if [[ -z "$main_bin" ]]; then
-      local main_archive_url="https://github.com/unrealandychan/Hermes-Easy-Deploy/archive/refs/heads/main.tar.gz"
+      local main_archive_url="https://github.com/unrealandychan/Hermes-Agent-Cloud/archive/refs/heads/main.tar.gz"
       info "Tagged archive did not contain a usable CLI; retrying from ${main_archive_url}..."
 
       local tmp_main_dir
@@ -270,9 +270,9 @@ install_hermes_deploy() {
           src_dir="$candidate_dir"
           main_bin="hermes-deploy"
           break
-        elif [[ -f "$candidate_dir/Hermes-Easy-Deploy" ]]; then
+        elif [[ -f "$candidate_dir/hermes-agent-cloud" ]]; then
           src_dir="$candidate_dir"
-          main_bin="Hermes-Easy-Deploy"
+          main_bin="hermes-agent-cloud"
           break
         fi
       done
@@ -280,10 +280,10 @@ install_hermes_deploy() {
   fi
 
   if [[ -z "$main_bin" ]]; then
-    die "Could not find CLI executable in source (expected hermes-deploy or Hermes-Easy-Deploy)."
+    die "Could not find CLI executable in source (expected hermes-deploy or hermes-agent-cloud)."
   fi
 
-  # Install to /usr/local/lib/Hermes-Easy-Deploy
+  # Install to /usr/local/lib/hermes-agent-cloud
   sudo rm -rf "$INSTALL_LIB"
   sudo mkdir -p "$INSTALL_LIB"
   sudo cp -r "$src_dir/." "$INSTALL_LIB/"
@@ -293,9 +293,9 @@ install_hermes_deploy() {
 
   # Symlink the main binary into PATH
   sudo ln -sf "$INSTALL_LIB/$main_bin" "$INSTALL_BIN/hermes-deploy"
-  sudo ln -sf "$INSTALL_LIB/$main_bin" "$INSTALL_BIN/Hermes-Easy-Deploy"
+  sudo ln -sf "$INSTALL_LIB/$main_bin" "$INSTALL_BIN/hermes-agent-cloud"
 
-  ok "Hermes-Easy-Deploy installed → $INSTALL_BIN/hermes-deploy"
+  ok "Hermes Agent Cloud installed → $INSTALL_BIN/hermes-deploy"
 }
 
 # ── Main ────────────────────────────────────────────────────────────────────
@@ -316,7 +316,7 @@ main() {
   echo "    hermes-deploy                    # launch the wizard"
   echo "    hermes-deploy --help             # show all commands"
   echo "    hermes-deploy version            # confirm version"
-  echo "    Hermes-Easy-Deploy               # legacy alias"
+  echo "    hermes-agent-cloud               # new command"
   echo ""
 }
 

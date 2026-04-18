@@ -59,7 +59,7 @@ export default function Hero() {
                 Install Free
               </a>
               <a
-                href="https://github.com/unrealandychan/Hermes-Easy-Deploy"
+                href="https://github.com/unrealandychan/Hermes-Agent-Cloud"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm border transition-all duration-200 text-white"

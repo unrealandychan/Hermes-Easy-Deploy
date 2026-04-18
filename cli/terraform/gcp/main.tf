@@ -36,6 +36,6 @@ resource "google_compute_instance" "hermes" {
   tags = ["hermes-agent"]
 
   labels = {
-    project = "Hermes-Easy-Deploy"
+    project = "Hermes-Agent-Cloud"
   }
 }

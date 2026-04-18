@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# enums.sh — All enumerated values and validation helpers for Hermes-Easy-Deploy
+# enums.sh — All enumerated values and validation helpers for Hermes Agent Cloud
 #
 # HOW TO EXTEND
 # ─────────────
 # Add a cloud    : append to VALID_CLOUDS + CLOUD_DISPLAY_LABELS, create lib/<cloud>.sh,
-#                  add case branches in Hermes-Easy-Deploy and scripts/bootstrap.sh
+#                  add case branches in hermes-deploy and scripts/bootstrap.sh
 # Add a region   : append to VALID_<CLOUD>_REGIONS + <CLOUD>_REGION_LABELS (same index)
 # Add an LLM key : append to API_PROVIDER_ORDER, add key→value entries in the four
 #                  API_PROVIDER_* arrays, update scripts/bootstrap.sh pull_* functions

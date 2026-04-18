@@ -17,7 +17,7 @@ resource "azurerm_resource_group" "hermes" {
   location = var.location
 
   tags = {
-    Project = "Hermes-Easy-Deploy"
+    Project = "Hermes-Agent-Cloud"
   }
 }
 
@@ -49,6 +49,6 @@ resource "azurerm_linux_virtual_machine" "hermes" {
   }
 
   tags = {
-    Project = "Hermes-Easy-Deploy"
+    Project = "Hermes-Agent-Cloud"
   }
 }

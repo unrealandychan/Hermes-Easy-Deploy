@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Hermes-Easy-Deploy — Deploy the Hermes Agent to AWS, Azure, or GCP
-# Usage: Hermes-Easy-Deploy [command] [options]
+# Hermes Agent Cloud — Deploy the Hermes Agent to AWS, Azure, or GCP
+# Usage: hermes-agent-cloud [command] [options]
 set -euo pipefail
 
 HERMES_DEPLOY_VERSION="1.0.1"
@@ -13,7 +13,7 @@ if (( BASH_VERSINFO[0] < 4 )); then
     fi
   done
 
-  echo "Hermes-Easy-Deploy requires Bash 4+." >&2
+  echo "hermes-agent-cloud requires Bash 4+." >&2
   echo "Install it with: brew install bash" >&2
   exit 1
 fi
@@ -31,7 +31,7 @@ resolve_script_dir() {
 }
 
 HERMES_DEPLOY_DIR="$(resolve_script_dir)"
-HERMES_DEPLOY_HOME="${HOME}/.Hermes-Easy-Deploy"
+HERMES_DEPLOY_HOME="${HOME}/.hermes-agent-cloud"
 
 # ─── Source libraries ───────────────────────────────────────────────────────
 # shellcheck source=lib/enums.sh  — must be first; other libs depend on enum arrays
@@ -79,7 +79,7 @@ cmd_help() {
   hermes_banner
   echo ""
   gum style --foreground 212 --bold "USAGE"
-  echo "  Hermes-Easy-Deploy [command] [options]"
+  echo "  hermes-agent-cloud [command] [options]"
   echo ""
   gum style --foreground 212 --bold "COMMANDS"
   printf "  %-12s %s\n" "deploy"  "Deploy Hermes Agent to a cloud provider (default)"
@@ -98,18 +98,18 @@ cmd_help() {
   printf "  %-20s %s\n" "--help"                 "Show this help"
   echo ""
   gum style --foreground 212 --bold "EXAMPLES"
-  echo "  Hermes-Easy-Deploy                               # launch the wizard"
-  echo "  Hermes-Easy-Deploy deploy --cloud aws            # deploy to AWS"
-  echo "  Hermes-Easy-Deploy deploy --cloud gcp --dry-run  # preview GCP plan"
-  echo "  Hermes-Easy-Deploy ssh                           # SSH into the instance"
-  echo "  Hermes-Easy-Deploy secrets                       # rotate API keys"
-  echo "  Hermes-Easy-Deploy destroy                       # tear everything down"
+  echo "  hermes-agent-cloud                               # launch the wizard"
+  echo "  hermes-agent-cloud deploy --cloud aws            # deploy to AWS"
+  echo "  hermes-agent-cloud deploy --cloud gcp --dry-run  # preview GCP plan"
+  echo "  hermes-agent-cloud ssh                           # SSH into the instance"
+  echo "  hermes-agent-cloud secrets                       # rotate API keys"
+  echo "  hermes-agent-cloud destroy                       # tear everything down"
   echo ""
 }
 
 # ─── Version ────────────────────────────────────────────────────────────────
 cmd_version() {
-  echo "Hermes-Easy-Deploy v${HERMES_DEPLOY_VERSION}"
+  echo "hermes-agent-cloud v${HERMES_DEPLOY_VERSION}"
 }
 
 # ─── Deploy ─────────────────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ cmd_deploy() {
 cmd_status() {
   config_load
   [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
-  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: Hermes-Easy-Deploy deploy"; exit 1; }
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-agent-cloud deploy"; exit 1; }
 
   hermes_banner
   case "$CLOUD" in
@@ -153,7 +153,7 @@ cmd_status() {
 cmd_ssh() {
   config_load
   [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
-  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: Hermes-Easy-Deploy deploy"; exit 1; }
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-agent-cloud deploy"; exit 1; }
 
   case "$CLOUD" in
     aws)   aws_ssh   ;;
@@ -166,7 +166,7 @@ cmd_ssh() {
 cmd_logs() {
   config_load
   [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
-  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: Hermes-Easy-Deploy deploy"; exit 1; }
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-agent-cloud deploy"; exit 1; }
 
   case "$CLOUD" in
     aws)   aws_logs   ;;
@@ -179,7 +179,7 @@ cmd_logs() {
 cmd_secrets() {
   config_load
   [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
-  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: Hermes-Easy-Deploy deploy"; exit 1; }
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-agent-cloud deploy"; exit 1; }
 
   hermes_banner
   case "$CLOUD" in
@@ -193,7 +193,7 @@ cmd_secrets() {
 cmd_destroy() {
   config_load
   [[ -z "$CLOUD" ]] && CLOUD="$(config_get "cloud")"
-  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: Hermes-Easy-Deploy deploy"; exit 1; }
+  [[ -z "$CLOUD" ]] && { error "No deployment found. Run: hermes-agent-cloud deploy"; exit 1; }
 
   hermes_banner
   confirm_destructive "This will PERMANENTLY destroy your Hermes instance and all data."

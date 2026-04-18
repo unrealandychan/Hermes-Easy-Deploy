@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# config.sh — Persist and read Hermes-Easy-Deploy configuration
+# config.sh — Persist and read Hermes-Agent-Cloud configuration
 
 CONFIG_FILE="${HERMES_DEPLOY_HOME}/config"
 

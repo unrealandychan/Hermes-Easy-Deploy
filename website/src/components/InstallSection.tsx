@@ -2,16 +2,16 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
-const INSTALL_CMD = `curl -sSL https://raw.githubusercontent.com/unrealandychan/Hermes-Easy-Deploy/main/cli/install.sh | bash`;
+const INSTALL_CMD = `curl -sSL https://raw.githubusercontent.com/unrealandychan/Hermes-Agent-Cloud/main/cli/install.sh | bash`;
 
 const COMMANDS = [
-  { cmd: "Hermes-Easy-Deploy",                          desc: "Launch interactive wizard" },
-  { cmd: "Hermes-Easy-Deploy deploy --cloud aws",       desc: "Deploy to AWS (flags mode)" },
-  { cmd: "Hermes-Easy-Deploy status --cloud azure",     desc: "Show running instance info" },
-  { cmd: "Hermes-Easy-Deploy ssh --cloud gcp",          desc: "SSH into the instance" },
-  { cmd: "Hermes-Easy-Deploy logs --cloud aws",         desc: "Tail journalctl logs" },
-  { cmd: "Hermes-Easy-Deploy secrets --cloud azure",    desc: "Update API keys in Key Vault" },
-  { cmd: "Hermes-Easy-Deploy destroy --cloud aws",      desc: "Tear down infra completely" },
+  { cmd: "hermes-agent-cloud",                          desc: "Launch interactive wizard" },
+  { cmd: "hermes-agent-cloud deploy --cloud aws",       desc: "Deploy to AWS (flags mode)" },
+  { cmd: "hermes-agent-cloud status --cloud azure",     desc: "Show running instance info" },
+  { cmd: "hermes-agent-cloud ssh --cloud gcp",          desc: "SSH into the instance" },
+  { cmd: "hermes-agent-cloud logs --cloud aws",         desc: "Tail journalctl logs" },
+  { cmd: "hermes-agent-cloud secrets --cloud azure",    desc: "Update API keys in Key Vault" },
+  { cmd: "hermes-agent-cloud destroy --cloud aws",      desc: "Tear down infra completely" },
 ];
 
 function CopyButton({ text }: { text: string }) {
@@ -45,7 +45,7 @@ export default function InstallSection() {
             <span className="gradient-text">Any machine.</span>
           </h2>
           <p className="text-base max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
-            Installs gum, Terraform, jq, and Hermes Easy Deploy. Works on macOS and
+            Installs gum, Terraform, jq, and Hermes Agent Cloud. Works on macOS and
             Debian/Ubuntu Linux.
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function InstallSection() {
         <p className="text-center text-sm mb-10" style={{ color: "var(--text-dim)" }}>
           Or clone manually:{" "}
           <code className="font-mono" style={{ color: "var(--text-muted)" }}>
-            git clone https://github.com/unrealandychan/Hermes-Easy-Deploy &amp;&amp; cd Hermes-Easy-Deploy &amp;&amp; ./install.sh
+            git clone https://github.com/unrealandychan/Hermes-Agent-Cloud &amp;&amp; cd Hermes-Agent-Cloud &amp;&amp; ./install.sh
           </code>
         </p>
 

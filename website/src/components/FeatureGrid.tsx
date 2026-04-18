@@ -23,9 +23,9 @@ const FEATURES = [
   { icon: MapPin,      label: "Post-deploy Access Guide",  desc: "SSH, gateway, logs, and destroy — all in one output" },
   { icon: Layers,      label: "Extensible Providers",      desc: "Add new LLM providers in a single enums.sh edit" },
   { icon: Eye,         label: "Masked Secret Input",       desc: "API keys never echo to screen or shell history" },
-  { icon: RefreshCw,   label: "Idempotent Destroy",        desc: "Hermes-Easy-Deploy destroy tears down cloud + config" },
+  { icon: RefreshCw,   label: "Idempotent Destroy",        desc: "hermes-agent-cloud destroy tears down cloud + config" },
   { icon: Zap,         label: "1-line Install",            desc: "curl | bash · auto-detects macOS or Linux" },
-  { icon: FileCode2,   label: "Config Persistence",        desc: "~/.Hermes-Easy-Deploy/config, key/value store" },
+  { icon: FileCode2,   label: "Config Persistence",        desc: "~/.hermes-agent-cloud/config, key/value store" },
   { icon: HardDrive,   label: "gp3 / SSD Disks",          desc: "Encrypted root disks on all three clouds" },
 ];
 
