@@ -69,7 +69,7 @@ parse_flags() {
       --no-color) NO_COLOR=true; shift  ;;
       --help|-h)  cmd_help; exit 0      ;;
       -*)  error "Unknown flag: $1"; exit 1 ;;
-      *)   SUBCOMMAND="$1"; shift; REMAINING_ARGS=("$@"); break ;;
+      *)   SUBCOMMAND="$1"; shift ;;
     esac
   done
 }

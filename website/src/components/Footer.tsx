@@ -14,7 +14,7 @@ export default function Footer() {
             <span className="text-white">Hermes&#160;</span><span style={{ color: "var(--amber)" }}>Easy</span><span className="text-white">&#160;Deploy</span>
             <span className="text-xs ml-2 px-2 py-0.5 rounded-full border font-normal"
               style={{ borderColor: "var(--border)", color: "var(--text-dim)" }}>
-              v1.0.0
+              v1.0.1
             </span>
           </div>
 
