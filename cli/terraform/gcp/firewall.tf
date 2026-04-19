@@ -25,3 +25,17 @@ resource "google_compute_firewall" "hermes_gateway" {
   target_tags   = ["hermes-agent"]
   description   = "Allow Hermes gateway port from deployer IP only"
 }
+
+resource "google_compute_firewall" "hermes_dashboard" {
+  name    = "hermes-allow-dashboard"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["9119"]
+  }
+
+  source_ranges = [var.allowed_ssh_cidr]
+  target_tags   = ["hermes-agent"]
+  description   = "Allow Hermes web dashboard port from deployer IP only"
+}

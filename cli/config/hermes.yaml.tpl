@@ -17,3 +17,7 @@ compression:
 
 display:
   tool_progress: all
+
+web:
+  enabled: true
+  port: 9119               # Web dashboard port

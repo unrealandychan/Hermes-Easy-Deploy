@@ -1,6 +1,6 @@
 resource "aws_security_group" "hermes" {
   name        = "hermes-sg"
-  description = "Hermes Agent - allow SSH and gateway only from deployer IP"
+  description = "Hermes Agent - allow SSH, gateway, and web dashboard from deployer IP"
 
   ingress {
     description = "SSH from deployer IP"
@@ -14,6 +14,14 @@ resource "aws_security_group" "hermes" {
     description = "Hermes gateway from deployer IP"
     from_port   = 8080
     to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ssh_cidr]
+  }
+
+  ingress {
+    description = "Hermes web dashboard from deployer IP"
+    from_port   = 9119
+    to_port     = 9119
     protocol    = "tcp"
     cidr_blocks = [var.allowed_ssh_cidr]
   }

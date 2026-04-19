@@ -12,6 +12,59 @@ _Changes staged for the next release will appear here._
 
 ---
 
+## [1.0.2] — 2026-04-19
+
+### Overview
+
+Adds support for the Hermes Agent web dashboard (port 9119). All cloud
+firewall rules now open port 9119 alongside the existing API gateway port 8080,
+and the Hermes Agent is always installed from the latest upstream release.
+
+### Added
+
+#### Web dashboard support
+- **Port 9119** opened on all three cloud providers (AWS, Azure, GCP) restricted
+  to the deployer IP, matching the Hermes Agent web dashboard default port.
+  See [Web Dashboard docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard).
+- `config/hermes.yaml.tpl` — added `web.enabled: true` and `web.port: 9119`
+  so the dashboard is enabled by default on every new deployment.
+- `scripts/bootstrap.sh` — Hermes config written to the VM now includes the
+  `web` section enabling the dashboard on port 9119.
+
+### Changed
+
+#### Terraform firewall rules — port 9119
+
+| Stack | Change |
+|---|---|
+| `terraform/aws/security_group.tf` | New ingress rule for port 9119 |
+| `terraform/azure/network.tf` | New NSG security rule for port 9119 (priority 1003) |
+| `terraform/gcp/firewall.tf` | New firewall rule for port 9119 |
+
+#### `scripts/bootstrap.sh`
+- Hermes Agent install command now passes `--latest` flag to always pull the
+  newest upstream release.
+- Hermes `config.yaml` written to the VM includes `web.enabled: true` and
+  `web.port: 9119`.
+
+#### `scripts/configure.sh`
+- Added step 8: web dashboard reachability check on `localhost:9119`.
+
+#### `lib/ui.sh` — `post_deploy_guide`
+- Step 3 now shows both endpoints: API gateway (`:8080`) and web dashboard (`:9119`).
+- Verification section updated: item (c) points to the web dashboard URL;
+  item (d) points to the API gateway URL.
+- Security notes updated to mention ports 8080 and 9119.
+
+### Security
+
+- Port 9119 (web dashboard) is restricted to the deployer IP at deploy time,
+  matching the same IP-lock applied to SSH (22) and the API gateway (8080).
+- Users are warned not to open port 9119 to `0.0.0.0/0` without adding
+  authentication in front.
+
+---
+
 ## [1.0.1] — 2026-04-17
 
 ### Overview

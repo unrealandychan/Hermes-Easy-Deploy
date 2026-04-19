@@ -36,10 +36,10 @@ fi
 usermod -aG docker $HERMES_USER
 log "  Docker $(docker --version)"
 
-# ── 3. Install Hermes Agent ──────────────────────────────────────────────────
-log "Step 3/4: Installing Hermes Agent"
+# ── 3. Install Hermes Agent (always pull latest) ─────────────────────────────
+log "Step 3/4: Installing Hermes Agent (latest)"
 sudo -u $HERMES_USER bash -c \
-  'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash'
+  'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash -s -- --latest'
 
 # Locate the hermes binary (installer may put it in ~/.local/bin or /usr/local/bin)
 HERMES_BIN=$(sudo -u $HERMES_USER bash -c \
@@ -65,6 +65,10 @@ compression:
 
 display:
   tool_progress: all
+
+web:
+  enabled: true
+  port: 9119
 YAML
 chown -R $HERMES_USER:$HERMES_USER $HERMES_HOME
 log "  Hermes config written to $HERMES_CONFIG"
