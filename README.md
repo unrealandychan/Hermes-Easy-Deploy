@@ -144,6 +144,21 @@ npm run dev          # http://localhost:3000
 | Azure | VM Standard_D2s_v3 | Azure Key Vault | Direct SSH · az ssh extension |
 | GCP | Compute Engine e2-standard-2 | Secret Manager | Direct SSH · gcloud compute ssh |
 
+## Web Dashboard
+
+Hermes Agent ships with a built-in web dashboard (v1.0.2+) that provides a browser-based UI for managing and interacting with the agent.
+
+| Endpoint | Port | Description |
+|---|---|---|
+| Web Dashboard | `9119` | Browser UI — [docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard) |
+| API Gateway | `8080` | REST/WebSocket API endpoint |
+
+Both ports are **restricted to your deployer IP** at provision time. To access the dashboard after deployment:
+
+```
+http://<instance-ip>:9119
+```
+
 ## LLM Providers
 
 | Provider | Env Var | Notes |

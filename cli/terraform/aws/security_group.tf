@@ -18,6 +18,14 @@ resource "aws_security_group" "hermes" {
     cidr_blocks = [var.allowed_ssh_cidr]
   }
 
+  ingress {
+    description = "Hermes web dashboard from deployer IP"
+    from_port   = 9119
+    to_port     = 9119
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ssh_cidr]
+  }
+
   egress {
     description = "All outbound (LLM API calls, package installs)"
     from_port   = 0

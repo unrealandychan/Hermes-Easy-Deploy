@@ -59,6 +59,19 @@ resource "azurerm_network_security_group" "hermes" {
     description                = "Hermes gateway from deployer IP only"
   }
 
+  security_rule {
+    name                       = "allow-hermes-dashboard"
+    priority                   = 1003
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "9119"
+    source_address_prefix      = var.allowed_ssh_cidr
+    destination_address_prefix = "*"
+    description                = "Hermes web dashboard from deployer IP only"
+  }
+
   tags = {
     Project = "Hermes-Agent-Cloud"
   }

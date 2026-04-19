@@ -120,6 +120,17 @@ else
   warn "Or check: journalctl -u hermes-gateway -n 30 --no-pager"
 fi
 
+# ── 8. Web dashboard reachability ─────────────────────────────────────────
+div "8.  Web dashboard reachability (localhost:9119)"
+if curl -sf --max-time 5 http://localhost:9119 &>/dev/null \
+   || curl -sf --max-time 5 http://localhost:9119/health &>/dev/null; then
+  ok "Web dashboard responded on :9119"
+else
+  warn "Web dashboard did not respond on :9119"
+  warn "It may still be starting up — wait 30 s and retry"
+  warn "Or check: journalctl -u hermes-gateway -n 30 --no-pager"
+fi
+
 echo ""
 echo -e "${BOLD}══════════════════════════════════════════${RESET}"
 echo ""
