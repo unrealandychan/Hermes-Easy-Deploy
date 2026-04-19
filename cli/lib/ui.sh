@@ -236,7 +236,7 @@ post_deploy_guide() {
   gum style --foreground 245 "  d)  Open the API gateway in your browser"
   gum style --foreground 245 "      http://${ip}:8080"
   echo ""
-  gum style --foreground 245 "  d)  View live install log if you need to diagnose issues"
+  gum style --foreground 245 "  e)  View live install log if you need to diagnose issues"
   gum style --foreground 245 "      \$ sudo tail -f /var/log/hermes-bootstrap.log"
   echo ""
 
