@@ -66,7 +66,7 @@ bash install.sh
 
 ```bash
 hermes-agent-cloud version
-# hermes-agent-cloud v1.0.1
+# hermes-agent-cloud v1.0.2
 ```
 
 ---

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 const LINES = [
   { delay: 0,    text: "$ hermes-agent-cloud",                  type: "cmd"   },
   { delay: 600,  text: "",                                  type: "blank" },
-  { delay: 700,  text: "  ⚡  Hermes Agent Cloud  v1.0.1", type: "banner"},
+  { delay: 700,  text: "  ⚡  Hermes Agent Cloud  v1.0.2", type: "banner"},
   { delay: 900,  text: "  Deploy the Hermes Agent anywhere.", type: "dim" },
   { delay: 1100, text: "",                                  type: "blank" },
   { delay: 1300, text: "  [1/6] Cloud provider   →  AWS",  type: "step"  },
