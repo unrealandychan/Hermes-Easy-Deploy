@@ -39,7 +39,7 @@ log "  Docker $(docker --version)"
 # ── 3. Install Hermes Agent (always pull latest) ─────────────────────────────
 log "Step 3/4: Installing Hermes Agent (latest)"
 sudo -u $HERMES_USER bash -c \
-  'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash -s -- --latest'
+  'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash'
 
 # Locate the hermes binary (installer may put it in ~/.local/bin or /usr/local/bin)
 HERMES_BIN=$(sudo -u $HERMES_USER bash -c \
