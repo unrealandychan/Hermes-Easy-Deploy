@@ -16,7 +16,8 @@ azure_wizard() {
 
   # ── Step 1: Subscription / Region ─────────────────────────────────────────
   step_header 1 $steps "Azure Region"
-  local sub_name
+  local sub_id sub_name
+  sub_id=$(az account show --query id -o tsv 2>/dev/null || echo "")
   sub_name=$(az account show --query name -o tsv 2>/dev/null || echo "unknown")
   warn "Using Azure subscription: ${sub_name}"
   echo ""
@@ -94,6 +95,7 @@ azure_wizard() {
   cp -r "${HERMES_DEPLOY_DIR}/terraform/azure/." "$tf_dir/"
 
   cat > "${tf_dir}/terraform.tfvars" <<EOF
+subscription_id  = "${sub_id}"
 location         = "${REGION}"
 vm_size          = "${vm_size}"
 allowed_ssh_cidr = "${allowed_cidr}"

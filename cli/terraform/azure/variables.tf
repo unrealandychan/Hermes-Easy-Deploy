@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  description = "Azure Subscription ID to deploy into"
+  type        = string
+}
+
 variable "location" {
   description = "Azure region to deploy into"
   type        = string
