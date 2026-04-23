@@ -67,8 +67,8 @@ sudo -u $HERMES_USER bash -c \
   'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash'
 
 # Locate the hermes binary (installer may put it in ~/.local/bin or /usr/local/bin)
-HERMES_BIN=$(sudo -u $HERMES_USER bash -c \
-  'command -v hermes 2>/dev/null || echo /home/ubuntu/.local/bin/hermes')
+HERMES_BIN=$(sudo -u "$HERMES_USER" bash -c \
+  "command -v hermes 2>/dev/null || echo /home/${HERMES_USER}/.local/bin/hermes")
 log "  Hermes binary: $HERMES_BIN"
 
 # Write Hermes config

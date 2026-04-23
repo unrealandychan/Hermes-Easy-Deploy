@@ -87,7 +87,7 @@ ssh_install() {
       -o StrictHostKeyChecking=accept-new \
       -o ConnectTimeout=15 \
       "${user}@${ip}" \
-      'sudo bash -s' < "$bootstrap"
+      "sudo bash -s -- --user '${user}'" < "$bootstrap"
 
   echo ""
   success "Remote installation complete."
