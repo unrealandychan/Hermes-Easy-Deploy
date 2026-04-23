@@ -139,6 +139,68 @@ hermes-agent-cloud destroy --cloud aws
 
 ---
 
+## Multi-Profile Support
+
+Run **multiple isolated Hermes Agent instances** on the same machine — each with its own API keys, config, port, and systemd service.
+
+### Use Cases
+
+- Separate **work** and **personal** profiles with different API keys
+- Run **different LLM providers** side-by-side (e.g. OpenRouter vs Anthropic)
+- Isolate **projects** that need different agent configurations
+
+### Profile Commands
+
+```bash
+# Create a new profile (prompts for API keys)
+hermes-agent-cloud profile create work
+hermes-agent-cloud profile create personal
+
+# List all profiles and their ports
+hermes-agent-cloud profile list
+
+# Switch the active profile
+hermes-agent-cloud profile use work
+
+# Show details of a profile
+hermes-agent-cloud profile show work
+
+# Remove a profile
+hermes-agent-cloud profile remove work
+```
+
+### Port Allocation
+
+Each profile gets an automatically assigned port pair:
+
+| Profile  | Web Dashboard | API Gateway |
+|----------|---------------|-------------|
+| `default` | `9119`       | `8080`      |
+| 1st extra | `9120`       | `8081`      |
+| 2nd extra | `9121`       | `8082`      |
+| …         | …            | …           |
+
+### Profile Storage
+
+```
+~/.hermes-profiles/
+├── default/          # backward-compatible with v1.x
+│   ├── .env          # API keys (chmod 600)
+│   └── config.yaml
+├── work/
+│   ├── .env
+│   └── config.yaml
+└── personal/
+    ├── .env
+    └── config.yaml
+```
+
+Each profile runs as its own **systemd service** (`hermes-default`, `hermes-work`, `hermes-personal`), so they start independently on reboot.
+
+> **Backward compatibility:** Existing single-instance deployments continue to work unchanged — they are automatically treated as the `default` profile.
+
+---
+
 ## Run the Website Locally
 
 ```bash
