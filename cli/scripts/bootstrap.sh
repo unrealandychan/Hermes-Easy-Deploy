@@ -2,17 +2,42 @@
 # bootstrap.sh — Hermes Agent installation and configuration script
 #
 # Runs over SSH after Terraform provisions the VM.
-# Expects ~/.hermes/.env to already exist (written by the CLI via ssh_upload_env).
+# Expects the profile .env to already exist (written by the CLI via ssh_upload_env).
 # Must be run as root (sudo).
+#
+# Usage: bootstrap.sh [--user <ssh-user>] [--profile <profile-name>] [--web-port <port>] [--api-port <port>]
 set -euo pipefail
 
-# ── Constants ──────────────────────────────────────────────────────────────
+# ── Argument parsing ────────────────────────────────────────────────────────
 HERMES_USER="ubuntu"
-HERMES_HOME="/home/$HERMES_USER/.hermes"
+HERMES_PROFILE="default"
+WEB_PORT="9119"
+API_PORT="8080"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --user)      HERMES_USER="$2";    shift 2 ;;
+    --profile)   HERMES_PROFILE="$2"; shift 2 ;;
+    --web-port)  WEB_PORT="$2";       shift 2 ;;
+    --api-port)  API_PORT="$2";       shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+# ── Constants ──────────────────────────────────────────────────────────────
+# Profiles are stored under ~/.hermes-profiles/<name>/
+# The "default" profile keeps .env at ~/.hermes/.env for backward compatibility.
+HERMES_PROFILES_ROOT="/home/${HERMES_USER}/.hermes-profiles"
+if [[ "$HERMES_PROFILE" == "default" ]]; then
+  HERMES_HOME="/home/$HERMES_USER/.hermes"
+else
+  HERMES_HOME="${HERMES_PROFILES_ROOT}/${HERMES_PROFILE}"
+fi
 HERMES_ENV="$HERMES_HOME/.env"
 HERMES_CONFIG="$HERMES_HOME/config.yaml"
-LOG_FILE="/var/log/hermes-bootstrap.log"
-LOG_TAG="hermes-bootstrap"
+SERVICE_NAME="hermes-${HERMES_PROFILE}"
+LOG_FILE="/var/log/hermes-bootstrap-${HERMES_PROFILE}.log"
+LOG_TAG="hermes-bootstrap[${HERMES_PROFILE}]"
 
 log()  { echo "[$LOG_TAG] $*" | tee -a $LOG_FILE; }
 fail() { echo "[$LOG_TAG] ERROR: $*" | tee -a $LOG_FILE >&2; exit 1; }
@@ -68,14 +93,14 @@ display:
 
 web:
   enabled: true
-  port: 9119
+  port: ${WEB_PORT}
 YAML
 chown -R $HERMES_USER:$HERMES_USER $HERMES_HOME
 log "  Hermes config written to $HERMES_CONFIG"
 
 # ── 4. Register hermes-gateway systemd service ───────────────────────────────
-log "Step 4/4: Registering systemd service"
-cat > /etc/systemd/system/hermes-gateway.service <<EOF
+log "Step 4/4: Registering systemd service (${SERVICE_NAME})"
+cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=Hermes Agent Gateway
 Documentation=https://hermes-agent.nousresearch.com
@@ -98,8 +123,8 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable hermes-gateway
-systemctl start hermes-gateway
+systemctl enable "${SERVICE_NAME}"
+systemctl start "${SERVICE_NAME}"
 log "  hermes-gateway service started"
 
-log "Bootstrap complete. Check status: journalctl -u hermes-gateway -f"
+log "Bootstrap complete. Check status: journalctl -u ${SERVICE_NAME} -f"

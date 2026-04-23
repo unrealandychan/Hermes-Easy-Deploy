@@ -50,6 +50,8 @@ source "${HERMES_DEPLOY_DIR}/lib/aws.sh"
 source "${HERMES_DEPLOY_DIR}/lib/azure.sh"
 # shellcheck source=lib/gcp.sh
 source "${HERMES_DEPLOY_DIR}/lib/gcp.sh"
+# shellcheck source=lib/profile.sh
+source "${HERMES_DEPLOY_DIR}/lib/profile.sh"
 
 # ─── Globals ────────────────────────────────────────────────────────────────
 CLOUD=""
@@ -88,6 +90,7 @@ cmd_help() {
   printf "  %-12s %s\n" "logs"    "Stream live Hermes gateway logs"
   printf "  %-12s %s\n" "secrets" "Update API keys in the cloud vault"
   printf "  %-12s %s\n" "destroy" "Tear down all deployed resources"
+  printf "  %-12s %s\n" "profile" "Manage named profiles (multi-instance)"
   printf "  %-12s %s\n" "version" "Print version"
   echo ""
   gum style --foreground 212 --bold "OPTIONS"
@@ -219,6 +222,7 @@ main() {
     logs)    cmd_logs    ;;
     secrets) cmd_secrets ;;
     destroy) cmd_destroy ;;
+    profile) cmd_profile "${REMAINING_ARGS[@]:-}" ;;
     version) cmd_version ;;
     help)    cmd_help    ;;
     *)
