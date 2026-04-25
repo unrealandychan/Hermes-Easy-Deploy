@@ -12,6 +12,42 @@ _Changes staged for the next release will appear here._
 
 ---
 
+## [1.0.3] — 2026-04-25
+
+### Overview
+
+Expands instance/VM size options across all three cloud providers by adding a
+**Budget tier** (2 vCPU / 4 GB) and renaming the previous middle tier to
+**Medium** for clarity. Users now have four tiers to choose from: Budget →
+Recommended → Medium → High performance.
+
+### Added
+
+#### New Budget-tier instance options (`lib/enums.sh`)
+
+| Cloud | New option | vCPU | RAM |
+|---|---|---|---|
+| AWS | `t3.medium` | 2 | 4 GB |
+| Azure | `Standard_B2s` | 2 | 4 GB |
+| GCP | `e2-medium` | 2 | 4 GB |
+
+All three new options are prepended to their respective `VALID_*` and `*_LABELS`
+arrays so they appear first in the wizard selection menu.
+
+### Changed
+
+#### `lib/enums.sh` — label wording
+
+- AWS `t3.xlarge`: label updated from `(Larger)` → `(Medium)`
+- Azure `Standard_D4s_v3`: label updated from `(Larger)` → `(Medium)`
+- GCP `e2-standard-4`: label updated from `(Larger)` → `(Medium)`
+
+#### `install.sh` — version bump
+
+- `HERMES_DEPLOY_VERSION` bumped from `1.0.2` → `1.0.3`
+
+---
+
 ## [1.0.2] — 2026-04-19
 
 ### Overview

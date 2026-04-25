@@ -94,11 +94,12 @@ AWS_REGION_LABELS=(
   "ap-south-1     (Mumbai)"
 )
 
-VALID_AWS_INSTANCE_TYPES=("t3.large" "t3.xlarge" "t3.2xlarge")
+VALID_AWS_INSTANCE_TYPES=("t3.medium" "t3.large" "t3.xlarge" "t3.2xlarge")
 
 AWS_INSTANCE_TYPE_LABELS=(
+  "t3.medium   — 2 vCPU  4 GB   (Budget)"
   "t3.large    — 2 vCPU  8 GB   (Recommended)"
-  "t3.xlarge   — 4 vCPU  16 GB  (Larger)"
+  "t3.xlarge   — 4 vCPU  16 GB  (Medium)"
   "t3.2xlarge  — 8 vCPU  32 GB  (High performance)"
 )
 
@@ -126,14 +127,16 @@ AZURE_LOCATION_LABELS=(
 )
 
 VALID_AZURE_VM_SIZES=(
+  "Standard_B2s"
   "Standard_D2s_v3"
   "Standard_D4s_v3"
   "Standard_D8s_v3"
 )
 
 AZURE_VM_SIZE_LABELS=(
+  "Standard_B2s     — 2 vCPU  4 GB   (Budget)"
   "Standard_D2s_v3  — 2 vCPU  8 GB   (Recommended)"
-  "Standard_D4s_v3  — 4 vCPU  16 GB  (Larger)"
+  "Standard_D4s_v3  — 4 vCPU  16 GB  (Medium)"
   "Standard_D8s_v3  — 8 vCPU  32 GB  (High performance)"
 )
 
@@ -161,14 +164,16 @@ GCP_REGION_LABELS=(
 )
 
 VALID_GCP_MACHINE_TYPES=(
+  "e2-medium"
   "e2-standard-2"
   "e2-standard-4"
   "e2-standard-8"
 )
 
 GCP_MACHINE_TYPE_LABELS=(
+  "e2-medium      — 2 vCPU  4 GB   (Budget)"
   "e2-standard-2  — 2 vCPU  8 GB   (Recommended)"
-  "e2-standard-4  — 4 vCPU  16 GB  (Larger)"
+  "e2-standard-4  — 4 vCPU  16 GB  (Medium)"
   "e2-standard-8  — 8 vCPU  32 GB  (High performance)"
 )
 
