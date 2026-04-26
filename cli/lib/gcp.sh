@@ -5,7 +5,7 @@
 
 # ─── Wizard ─────────────────────────────────────────────────────────────────
 gcp_wizard() {
-  local steps=6
+  local steps=7
   preflight_check_cloud "gcp"
 
   # Ensure authenticated
@@ -35,18 +35,30 @@ gcp_wizard() {
   region_choice=$(choose_one "Select deployment region" "${GCP_REGION_LABELS[@]}")
   REGION="$(echo "$region_choice" | awk '{print $1}')"
   validate_gcp_region "$REGION"
-  local zone="${REGION}-a"
 
-  # ── Step 2: Machine type ──────────────────────────────────────────────────
-  step_header 2 $steps "Machine Type"
+  # ── Step 2: Zone selection ────────────────────────────────────────────────
+  step_header 2 $steps "GCP Zone"
+  local zones zone_list zone
+  zone_list=$(gcloud compute zones list --filter="region:($REGION)" --format="value(name)" 2>/dev/null || echo "")
+  
+  if [[ -n "$zone_list" ]]; then
+    IFS=$'\n' read -rd '' -a zones <<< "$zone_list"
+    zone=$(choose_one "Select deployment zone" "${zones[@]}")
+  else
+    zone="${REGION}-a"
+    warn "Could not fetch zones from GCP. Falling back to default: ${zone}"
+  fi
+
+  # ── Step 3: Machine type ──────────────────────────────────────────────────
+  step_header 3 $steps "Machine Type"
   local machine_choice
   machine_choice=$(choose_one "Select machine type" "${GCP_MACHINE_TYPE_LABELS[@]}")
   local machine_type
   machine_type="$(echo "$machine_choice" | awk '{print $1}')"
   validate_gcp_machine_type "$machine_type"
 
-  # ── Step 3: Network access ────────────────────────────────────────────────
-  step_header 3 $steps "Network Access"
+  # ── Step 4: Network access ────────────────────────────────────────────────
+  step_header 4 $steps "Network Access"
   local my_ip
   my_ip=$(curl -sf --max-time 5 "https://api.ipify.org" \
             || curl -sf --max-time 5 "https://ifconfig.me" \
@@ -54,8 +66,8 @@ gcp_wizard() {
   local allowed_cidr="${my_ip}/32"
   warn "SSH / gateway access will be locked to your current IP: ${my_ip}"
 
-  # ── Step 4: API Keys ──────────────────────────────────────────────────────
-  step_header 4 $steps "API Keys  (at least one required)"
+  # ── Step 5: API Keys ──────────────────────────────────────────────────────
+  step_header 5 $steps "API Keys  (at least one required)"
   local openrouter_key openai_key anthropic_key gemini_key
   openrouter_key=$(masked_input "OpenRouter API key")
   openai_key=$(masked_input "OpenAI API key")
@@ -70,8 +82,8 @@ gcp_wizard() {
   fi
   success "${key_count} key(s) provided"
 
-  # ── Step 5: Summary ───────────────────────────────────────────────────────
-  step_header 5 $steps "Deployment Summary"
+  # ── Step 6: Summary ───────────────────────────────────────────────────────
+  step_header 6 $steps "Deployment Summary"
   summary_table \
     "Cloud"        "GCP" \
     "Project"      "$project_id" \
@@ -81,8 +93,8 @@ gcp_wizard() {
     "Allowed IP"   "$my_ip" \
     "API Keys"     "${key_count} provided"
 
-  # ── Step 6: Confirm ───────────────────────────────────────────────────────
-  step_header 6 $steps "Deploy"
+  # ── Step 7: Confirm ───────────────────────────────────────────────────────
+  step_header 7 $steps "Deploy"
   gum confirm "Deploy Hermes Agent to GCP (${REGION})?" || { warn "Aborted."; exit 0; }
 
   # ── Prepare workspace ─────────────────────────────────────────────────────
