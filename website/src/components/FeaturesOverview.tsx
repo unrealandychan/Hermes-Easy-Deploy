@@ -1,5 +1,5 @@
 "use client";
-import { Sparkles, Cloud, ShieldCheck } from "lucide-react";
+import { Sparkles, Cloud, ShieldCheck, DollarSign } from "lucide-react";
 
 const PILLARS = [
   {
@@ -21,10 +21,18 @@ const PILLARS = [
   {
     icon: ShieldCheck,
     accent: "#34d399",
-    title: "Zero-Plaintext Secrets",
+    title: "IAM Permission Profiles",
     desc:
-      "API keys are stored in AWS SSM Parameter Store, Azure Key Vault, or GCP Secret Manager via IAM-native access. No plaintext in config, scripts, or environment.",
-    tags: ["IAM", "Vault", "SSM", "Key Vault"],
+      "Choose minimal, S3, Billing, RDS, or full access — the wizard attaches the right IAM policies, Azure RBAC roles, or GCP IAM bindings automatically. Zero manual console work.",
+    tags: ["IAM", "RBAC", "S3", "RDS", "Billing"],
+  },
+  {
+    icon: DollarSign,
+    accent: "#38bdf8",
+    title: "Built-in Billing Insights",
+    desc:
+      "Run hermes-agent-cloud billing to query AWS Cost Explorer, Azure Cost Management, or GCP Billing — cost breakdown by service, budget alerts, and monthly totals.",
+    tags: ["Cost Explorer", "Budget", "Azure Cost", "GCP Billing"],
   },
 ];
 
@@ -46,7 +54,7 @@ export default function FeaturesOverview() {
         </div>
 
         {/* Cards */}
-        <div className="grid sm:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {PILLARS.map(({ icon: Icon, accent, title, desc, tags }) => (
             <div
               key={title}

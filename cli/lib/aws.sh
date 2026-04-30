@@ -5,7 +5,7 @@
 
 # ─── Wizard ─────────────────────────────────────────────────────────────────
 aws_wizard() {
-  local steps=6
+  local steps=7
   preflight_check_cloud "aws"
 
   # ── Step 1: Region ────────────────────────────────────────────────────────
@@ -44,8 +44,43 @@ aws_wizard() {
   local allowed_cidr="${my_ip}/32"
   warn "SSH / gateway access will be locked to your current IP: ${my_ip}"
 
-  # ── Step 4: API Keys ──────────────────────────────────────────────────────
-  step_header 4 $steps "API Keys  (at least one required)"
+  # ── Step 4: Permission Profile ────────────────────────────────────────────
+  step_header 4 $steps "Permission Profile  (IAM policies for this instance)"
+
+  gum style --foreground 245 \
+    "Select the cloud services Hermes Agent should be able to operate." \
+    "Each selection attaches the corresponding managed AWS policy to the EC2 IAM role."
+  echo ""
+
+  local perm_choice
+  perm_choice=$(choose_one "Permission profile" \
+    "minimal    — SSM only  (default, no extra access)" \
+    "s3         — SSM + S3 read/write" \
+    "billing    — SSM + Billing/Cost Explorer read-only" \
+    "rds        — SSM + RDS full access" \
+    "s3+billing — SSM + S3 + Billing" \
+    "s3+rds     — SSM + S3 + RDS" \
+    "full       — SSM + S3 + Billing + RDS")
+
+  local enable_s3=false enable_billing=false enable_rds=false
+  case "$perm_choice" in
+    s3*)        enable_s3=true ;;
+    billing*)   enable_billing=true ;;
+    rds*)       enable_rds=true ;;
+    s3+billing*) enable_s3=true; enable_billing=true ;;
+    s3+rds*)    enable_s3=true; enable_rds=true ;;
+    full*)      enable_s3=true; enable_billing=true; enable_rds=true ;;
+  esac
+
+  local perm_summary=""
+  [[ "$enable_s3"      == "true" ]] && perm_summary+=" S3"
+  [[ "$enable_billing" == "true" ]] && perm_summary+=" Billing"
+  [[ "$enable_rds"     == "true" ]] && perm_summary+=" RDS"
+  [[ -z "$perm_summary" ]] && perm_summary=" SSM only"
+  success "Selected:${perm_summary}"
+
+  # ── Step 5: API Keys ──────────────────────────────────────────────────────
+  step_header 5 $steps "API Keys  (at least one required)"
   local openrouter_key openai_key anthropic_key gemini_key
   openrouter_key=$(masked_input "OpenRouter API key")
   openai_key=$(masked_input "OpenAI API key")
@@ -60,19 +95,20 @@ aws_wizard() {
   fi
   success "${key_count} key(s) provided"
 
-  # ── Step 5: Summary ───────────────────────────────────────────────────────
-  step_header 5 $steps "Deployment Summary"
+  # ── Step 6: Summary ───────────────────────────────────────────────────────
+  step_header 6 $steps "Deployment Summary"
   summary_table \
-    "Cloud"      "AWS" \
-    "Region"     "$REGION" \
-    "Instance"   "$instance_type" \
-    "Disk"       "50 GB gp3 (encrypted)" \
-    "Key Pair"   "$key_name" \
-    "Allowed IP" "$my_ip" \
-    "API Keys"   "${key_count} provided"
+    "Cloud"       "AWS" \
+    "Region"      "$REGION" \
+    "Instance"    "$instance_type" \
+    "Disk"        "50 GB gp3 (encrypted)" \
+    "Key Pair"    "$key_name" \
+    "Allowed IP"  "$my_ip" \
+    "Permissions" "${perm_summary# }" \
+    "API Keys"    "${key_count} provided"
 
-  # ── Step 6: Confirm ───────────────────────────────────────────────────────
-  step_header 6 $steps "Deploy"
+  # ── Step 7: Confirm ───────────────────────────────────────────────────────
+  step_header 7 $steps "Deploy"
   gum confirm "Deploy Hermes Agent to AWS (${REGION})?" || { warn "Aborted."; exit 0; }
 
   # ── Prepare workspace ─────────────────────────────────────────────────────
@@ -86,6 +122,9 @@ aws_region        = "${REGION}"
 instance_type     = "${instance_type}"
 key_name          = "${key_name}"
 allowed_ssh_cidr  = "${allowed_cidr}"
+enable_s3         = ${enable_s3}
+enable_billing    = ${enable_billing}
+enable_rds        = ${enable_rds}
 EOF
 
   # API key tfvars (auto-loaded by Terraform, kept out of terraform.tfvars)
@@ -102,6 +141,7 @@ EOF
   config_set "tf_dir"       "$tf_dir"
   config_set "ssh_key_path" "$ssh_key_path"
   config_set "ssh_user"     "ubuntu"
+  config_set "permissions"  "${perm_summary# }"
 
   # ── Terraform ─────────────────────────────────────────────────────────────
   echo ""
@@ -118,7 +158,7 @@ EOF
   spinner "Applying (this takes ~3 min)..." \
     terraform -chdir="$tf_dir" apply -auto-approve -no-color
 
-  # Capture outputs — grep the state file to avoid multi-line terraform messages
+  # Capture outputs
   local ip instance_id
   ip=$(terraform -chdir="$tf_dir" output -raw public_ip 2>/dev/null)
   ip="${ip//$'\n'/}"
@@ -159,12 +199,16 @@ aws_status() {
       --output text 2>/dev/null || echo "unknown")
   fi
 
+  local perms
+  perms=$(config_get "permissions" 2>/dev/null || echo "SSM only")
+
   summary_table \
-    "Cloud"      "AWS" \
-    "Region"     "$region" \
-    "Instance"   "$instance_id" \
-    "Public IP"  "$ip" \
-    "State"      "$state"
+    "Cloud"       "AWS" \
+    "Region"      "$region" \
+    "Instance"    "$instance_id" \
+    "Public IP"   "$ip" \
+    "Permissions" "$perms" \
+    "State"       "$state"
 }
 
 # ─── SSH ────────────────────────────────────────────────────────────────────

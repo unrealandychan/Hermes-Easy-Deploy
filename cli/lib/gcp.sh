@@ -5,7 +5,7 @@
 
 # ─── Wizard ─────────────────────────────────────────────────────────────────
 gcp_wizard() {
-  local steps=6
+  local steps=7
   preflight_check_cloud "gcp"
 
   # Ensure authenticated
@@ -54,8 +54,43 @@ gcp_wizard() {
   local allowed_cidr="${my_ip}/32"
   warn "SSH / gateway access will be locked to your current IP: ${my_ip}"
 
-  # ── Step 4: API Keys ──────────────────────────────────────────────────────
-  step_header 4 $steps "API Keys  (at least one required)"
+  # ── Step 4: Permission Profile ────────────────────────────────────────────
+  step_header 4 $steps "Permission Profile  (GCP IAM roles for this instance)"
+
+  gum style --foreground 245 \
+    "Select which GCP services Hermes Agent should be able to operate." \
+    "IAM bindings are granted to the VM's service account after deploy."
+  echo ""
+
+  local gcp_perm_choice
+  gcp_perm_choice=$(choose_one "Permission profile" \
+    "minimal    — no extra roles  (default)" \
+    "storage    — Storage Object Admin  (S3 equivalent)" \
+    "billing    — Billing Account Viewer + BigQuery Job User" \
+    "cloudsql   — Cloud SQL Admin  (RDS equivalent)" \
+    "storage+billing — Storage + Billing" \
+    "storage+sql     — Storage + Cloud SQL" \
+    "full       — Storage + Billing + Cloud SQL")
+
+  local gcp_enable_storage=false gcp_enable_billing=false gcp_enable_sql=false
+  case "$gcp_perm_choice" in
+    storage*)          gcp_enable_storage=true ;;
+    billing*)          gcp_enable_billing=true ;;
+    cloudsql*)         gcp_enable_sql=true ;;
+    storage+billing*)  gcp_enable_storage=true; gcp_enable_billing=true ;;
+    storage+sql*)      gcp_enable_storage=true; gcp_enable_sql=true ;;
+    full*)             gcp_enable_storage=true; gcp_enable_billing=true; gcp_enable_sql=true ;;
+  esac
+
+  local gcp_perm_summary=""
+  [[ "$gcp_enable_storage" == "true" ]] && gcp_perm_summary+=" Storage"
+  [[ "$gcp_enable_billing" == "true" ]] && gcp_perm_summary+=" Billing"
+  [[ "$gcp_enable_sql"     == "true" ]] && gcp_perm_summary+=" CloudSQL"
+  [[ -z "$gcp_perm_summary" ]] && gcp_perm_summary=" None (minimal)"
+  success "Selected:${gcp_perm_summary}"
+
+  # ── Step 5: API Keys ──────────────────────────────────────────────────────
+  step_header 5 $steps "API Keys  (at least one required)"
   local openrouter_key openai_key anthropic_key gemini_key
   openrouter_key=$(masked_input "OpenRouter API key")
   openai_key=$(masked_input "OpenAI API key")
@@ -70,19 +105,20 @@ gcp_wizard() {
   fi
   success "${key_count} key(s) provided"
 
-  # ── Step 5: Summary ───────────────────────────────────────────────────────
-  step_header 5 $steps "Deployment Summary"
+  # ── Step 6: Summary ───────────────────────────────────────────────────────
+  step_header 6 $steps "Deployment Summary"
   summary_table \
-    "Cloud"        "GCP" \
-    "Project"      "$project_id" \
+    "Cloud"         "GCP" \
+    "Project"       "$project_id" \
     "Region / Zone" "${REGION} / ${zone}" \
-    "Machine"      "$machine_type" \
-    "Disk"         "50 GB pd-ssd (encrypted)" \
-    "Allowed IP"   "$my_ip" \
-    "API Keys"     "${key_count} provided"
+    "Machine"       "$machine_type" \
+    "Disk"          "50 GB pd-ssd (encrypted)" \
+    "Allowed IP"    "$my_ip" \
+    "Permissions"   "${gcp_perm_summary# }" \
+    "API Keys"      "${key_count} provided"
 
-  # ── Step 6: Confirm ───────────────────────────────────────────────────────
-  step_header 6 $steps "Deploy"
+  # ── Step 7: Confirm ───────────────────────────────────────────────────────
+  step_header 7 $steps "Deploy"
   gum confirm "Deploy Hermes Agent to GCP (${REGION})?" || { warn "Aborted."; exit 0; }
 
   # ── Prepare workspace ─────────────────────────────────────────────────────
@@ -104,6 +140,7 @@ EOF
   config_set "project_id" "$project_id"
   config_set "tf_dir"     "$tf_dir"
   config_set "ssh_user"   "ubuntu"
+  config_set "permissions" "${gcp_perm_summary# }"
 
   # ── Enable required GCP APIs ────────────────────────────────────────────
   echo ""
@@ -133,6 +170,39 @@ EOF
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "hermes-instance"
+
+  # ── GCP IAM bindings for VM service account ───────────────────────────────
+  if [[ "$gcp_enable_storage" == "true" || "$gcp_enable_billing" == "true" || "$gcp_enable_sql" == "true" ]]; then
+    local sa_email
+    sa_email=$(gcloud compute instances describe hermes-instance \
+      --zone "$zone" --project "$project_id" \
+      --format="value(serviceAccounts[0].email)" 2>/dev/null || echo "")
+
+    if [[ -n "$sa_email" ]]; then
+      [[ "$gcp_enable_storage" == "true" ]] && spinner "Binding Storage Object Admin..." bash -c "
+        gcloud projects add-iam-policy-binding '${project_id}' \
+          --member='serviceAccount:${sa_email}' \
+          --role='roles/storage.objectAdmin' \
+          --condition=None --quiet 2>/dev/null || true"
+      [[ "$gcp_enable_billing" == "true" ]] && spinner "Binding Billing Account Viewer..." bash -c "
+        gcloud projects add-iam-policy-binding '${project_id}' \
+          --member='serviceAccount:${sa_email}' \
+          --role='roles/billing.viewer' \
+          --condition=None --quiet 2>/dev/null || true
+        gcloud projects add-iam-policy-binding '${project_id}' \
+          --member='serviceAccount:${sa_email}' \
+          --role='roles/bigquery.jobUser' \
+          --condition=None --quiet 2>/dev/null || true"
+      [[ "$gcp_enable_sql" == "true" ]] && spinner "Binding Cloud SQL Admin..." bash -c "
+        gcloud projects add-iam-policy-binding '${project_id}' \
+          --member='serviceAccount:${sa_email}' \
+          --role='roles/cloudsql.admin' \
+          --condition=None --quiet 2>/dev/null || true"
+      success "GCP IAM bindings applied to service account."
+    else
+      warn "Could not retrieve VM service account email — IAM bindings skipped."
+    fi
+  fi
 
   # ── SSH-based installation ─────────────────────────────────────────────────
   local gcp_ssh_key="$HOME/.ssh/google_compute_engine"

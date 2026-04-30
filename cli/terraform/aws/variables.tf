@@ -19,3 +19,23 @@ variable "allowed_ssh_cidr" {
   description = "CIDR block allowed to reach port 22 (SSH) and port 8080 (gateway)"
   type        = string
 }
+
+# ── Permission Profile ────────────────────────────────────────────────────────
+
+variable "enable_s3" {
+  description = "Attach AmazonS3FullAccess to the Hermes IAM role"
+  type        = bool
+  default     = false
+}
+
+variable "enable_billing" {
+  description = "Attach a billing read-only policy (Cost Explorer, Budgets) to the Hermes IAM role"
+  type        = bool
+  default     = false
+}
+
+variable "enable_rds" {
+  description = "Attach AmazonRDSFullAccess to the Hermes IAM role"
+  type        = bool
+  default     = false
+}

@@ -3,7 +3,7 @@
 # Usage: hermes-agent-cloud [command] [options]
 set -euo pipefail
 
-HERMES_DEPLOY_VERSION="1.0.2"
+HERMES_DEPLOY_VERSION="1.1.0"
 
 # enums.sh uses associative arrays, which require Bash 4+.
 if (( BASH_VERSINFO[0] < 4 )); then
@@ -50,6 +50,8 @@ source "${HERMES_DEPLOY_DIR}/lib/aws.sh"
 source "${HERMES_DEPLOY_DIR}/lib/azure.sh"
 # shellcheck source=lib/gcp.sh
 source "${HERMES_DEPLOY_DIR}/lib/gcp.sh"
+# shellcheck source=lib/billing.sh
+source "${HERMES_DEPLOY_DIR}/lib/billing.sh"
 # shellcheck source=lib/profile.sh
 source "${HERMES_DEPLOY_DIR}/lib/profile.sh"
 
@@ -89,6 +91,7 @@ cmd_help() {
   printf "  %-12s %s\n" "ssh"     "Open a shell on the Hermes instance"
   printf "  %-12s %s\n" "logs"    "Stream live Hermes gateway logs"
   printf "  %-12s %s\n" "secrets" "Update API keys in the cloud vault"
+  printf "  %-12s %s\n" "billing" "Show cloud cost summary and budget alerts"
   printf "  %-12s %s\n" "destroy" "Tear down all deployed resources"
   printf "  %-12s %s\n" "profile" "Manage named profiles (multi-instance)"
   printf "  %-12s %s\n" "version" "Print version"
@@ -106,7 +109,8 @@ cmd_help() {
   echo "  hermes-agent-cloud deploy --cloud gcp --dry-run  # preview GCP plan"
   echo "  hermes-agent-cloud ssh                           # SSH into the instance"
   echo "  hermes-agent-cloud secrets                       # rotate API keys"
-  echo "  hermes-agent-cloud destroy                       # tear everything down"
+  echo "  hermes-agent-cloud billing                            # view cloud cost summary"
+  echo "  hermes-agent-cloud billing --cloud aws               # AWS costs only"
   echo ""
 }
 
@@ -221,6 +225,7 @@ main() {
     ssh)     cmd_ssh     ;;
     logs)    cmd_logs    ;;
     secrets) cmd_secrets ;;
+    billing) billing_cmd ;;
     destroy) cmd_destroy ;;
     profile) cmd_profile "${REMAINING_ARGS[@]:-}" ;;
     version) cmd_version ;;

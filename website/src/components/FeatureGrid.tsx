@@ -12,20 +12,23 @@ import {
   Zap,
   FileCode2,
   HardDrive,
+  Database,
+  DollarSign,
+  FolderOpen,
 } from "lucide-react";
 
 const FEATURES = [
   { icon: Terminal,    label: "Interactive Wizard",        desc: "Step-by-step gum wizard for every cloud" },
-  { icon: ShieldCheck, label: "Enum Validation",           desc: "All options validated against typed enums" },
+  { icon: ShieldCheck, label: "IAM Permission Profiles",   desc: "Attach S3, Billing, RDS/SQL policies from the wizard — no manual IAM console" },
+  { icon: DollarSign,  label: "Built-in Billing Insights", desc: "hermes-agent-cloud billing — cost summary, top services, and budget alerts" },
+  { icon: Database,    label: "RDS / Cloud SQL Access",    desc: "Full database access profile for AWS RDS, Azure SQL, and GCP Cloud SQL" },
+  { icon: FolderOpen,  label: "S3 / Blob Storage Access",  desc: "Read/write access to AWS S3, Azure Blob Storage, and GCP Cloud Storage" },
   { icon: Container,   label: "Docker Sandbox",            desc: "5 GB RAM · 50 GB disk · container isolation" },
   { icon: Activity,    label: "Systemd Auto-start",        desc: "hermes-gateway boots on every instance reboot" },
   { icon: Stethoscope, label: "hermes doctor",             desc: "7-point health check runs after every deploy" },
   { icon: MapPin,      label: "Post-deploy Access Guide",  desc: "SSH, gateway, logs, and destroy — all in one output" },
-  { icon: Layers,      label: "Extensible Providers",      desc: "Add new LLM providers in a single enums.sh edit" },
   { icon: Eye,         label: "Masked Secret Input",       desc: "API keys never echo to screen or shell history" },
-  { icon: RefreshCw,   label: "Idempotent Destroy",        desc: "hermes-agent-cloud destroy tears down cloud + config" },
   { icon: Zap,         label: "1-line Install",            desc: "curl | bash · auto-detects macOS or Linux" },
-  { icon: FileCode2,   label: "Config Persistence",        desc: "~/.hermes-agent-cloud/config, key/value store" },
   { icon: HardDrive,   label: "gp3 / SSD Disks",          desc: "Encrypted root disks on all three clouds" },
 ];
 

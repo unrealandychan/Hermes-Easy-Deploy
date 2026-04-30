@@ -15,16 +15,16 @@ const STEPS = [
   },
   {
     n: "03",
-    title: "Deploy with Terraform",
-    desc: "The CLI calls terraform apply in the background. Secrets are vaulted in SSM / Key Vault / Secret Manager automatically. A live spinner tracks every step.",
+    title: "Choose permissions & deploy",
+    desc: "Select an IAM permission profile (S3, Billing, RDS, or custom). The CLI calls terraform apply and automatically attaches the right cloud policies. A live spinner tracks every step.",
     code: "hermes-agent-cloud deploy --cloud aws",
     accent: "#38bdf8",
   },
   {
     n: "04",
-    title: "Access your Agent",
-    desc: "Get your public IP, SSH command, and gateway URL instantly. Use hermes-agent-cloud status, logs, or ssh at any time.",
-    code: "hermes-agent-cloud status --cloud aws",
+    title: "Manage & monitor costs",
+    desc: "SSH in, stream logs, rotate secrets, or run hermes-agent-cloud billing to check your cloud spend, service breakdown, and budget alerts — all without leaving the CLI.",
+    code: "hermes-agent-cloud billing",
     accent: "#34d399",
   },
 ];

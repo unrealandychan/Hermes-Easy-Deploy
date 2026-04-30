@@ -5,7 +5,7 @@
 
 # ─── Wizard ─────────────────────────────────────────────────────────────────
 azure_wizard() {
-  local steps=6
+  local steps=7
   preflight_check_cloud "azure"
 
   # Ensure authenticated
@@ -58,8 +58,43 @@ azure_wizard() {
   local allowed_cidr="${my_ip}/32"
   warn "SSH / gateway access will be locked to your current IP: ${my_ip}"
 
-  # ── Step 4: API Keys ──────────────────────────────────────────────────────
-  step_header 4 $steps "API Keys  (at least one required)"
+  # ── Step 4: Permission Profile ────────────────────────────────────────────
+  step_header 4 $steps "Permission Profile  (Azure RBAC roles for this VM)"
+
+  gum style --foreground 245 \
+    "Select which Azure services Hermes Agent should be able to operate." \
+    "Roles are assigned to the VM's managed identity at deployment time."
+  echo ""
+
+  local azure_perm_choice
+  azure_perm_choice=$(choose_one "Permission profile" \
+    "minimal    — no extra roles  (default)" \
+    "storage    — Storage Blob Data Contributor  (S3 equivalent)" \
+    "billing    — Billing Reader + Cost Management Reader" \
+    "sql        — SQL DB Contributor  (RDS equivalent)" \
+    "storage+billing — Storage + Billing" \
+    "storage+sql     — Storage + SQL" \
+    "full       — Storage + Billing + SQL")
+
+  local azure_enable_storage=false azure_enable_billing=false azure_enable_sql=false
+  case "$azure_perm_choice" in
+    storage*)       azure_enable_storage=true ;;
+    billing*)       azure_enable_billing=true ;;
+    sql*)           azure_enable_sql=true ;;
+    storage+billing*) azure_enable_storage=true; azure_enable_billing=true ;;
+    storage+sql*)   azure_enable_storage=true; azure_enable_sql=true ;;
+    full*)          azure_enable_storage=true; azure_enable_billing=true; azure_enable_sql=true ;;
+  esac
+
+  local azure_perm_summary=""
+  [[ "$azure_enable_storage" == "true" ]] && azure_perm_summary+=" Storage"
+  [[ "$azure_enable_billing" == "true" ]] && azure_perm_summary+=" Billing"
+  [[ "$azure_enable_sql"     == "true" ]] && azure_perm_summary+=" SQL"
+  [[ -z "$azure_perm_summary" ]] && azure_perm_summary=" None (minimal)"
+  success "Selected:${azure_perm_summary}"
+
+  # ── Step 5: API Keys ──────────────────────────────────────────────────────
+  step_header 5 $steps "API Keys  (at least one required)"
   local openrouter_key openai_key anthropic_key gemini_key
   openrouter_key=$(masked_input "OpenRouter API key")
   openai_key=$(masked_input "OpenAI API key")
@@ -74,8 +109,8 @@ azure_wizard() {
   fi
   success "${key_count} key(s) provided"
 
-  # ── Step 5: Summary ───────────────────────────────────────────────────────
-  step_header 5 $steps "Deployment Summary"
+  # ── Step 6: Summary ───────────────────────────────────────────────────────
+  step_header 6 $steps "Deployment Summary"
   summary_table \
     "Cloud"        "Azure" \
     "Region"       "$REGION" \
@@ -83,10 +118,11 @@ azure_wizard() {
     "Disk"         "50 GB Premium_LRS (encrypted)" \
     "Resource Grp" "hermes-rg" \
     "Allowed IP"   "$my_ip" \
+    "Permissions"  "${azure_perm_summary# }" \
     "API Keys"     "${key_count} provided"
 
-  # ── Step 6: Confirm ───────────────────────────────────────────────────────
-  step_header 6 $steps "Deploy"
+  # ── Step 7: Confirm ───────────────────────────────────────────────────────
+  step_header 7 $steps "Deploy"
   gum confirm "Deploy Hermes Agent to Azure (${REGION})?" || { warn "Aborted."; exit 0; }
 
   # ── Prepare workspace ─────────────────────────────────────────────────────
@@ -108,6 +144,7 @@ EOF
   config_set "ssh_key_path"   "$ssh_private_key"
   config_set "ssh_user"       "azureuser"
   config_set "resource_group" "hermes-rg"
+  config_set "permissions"    "${azure_perm_summary# }"
 
   # ── Terraform ─────────────────────────────────────────────────────────────
   echo ""
@@ -134,6 +171,40 @@ EOF
 
   config_set "public_ip"   "$ip"
   config_set "instance_id" "$instance_id"
+
+  # ── Azure RBAC role assignments for VM managed identity ───────────────────
+  if [[ "$azure_enable_storage" == "true" || "$azure_enable_billing" == "true" || "$azure_enable_sql" == "true" ]]; then
+    local vm_principal_id
+    vm_principal_id=$(az vm show \
+      --name hermes-instance \
+      --resource-group hermes-rg \
+      --query "identity.principalId" -o tsv 2>/dev/null || echo "")
+
+    if [[ -n "$vm_principal_id" ]]; then
+      local scope="/subscriptions/${sub_id}"
+      [[ "$azure_enable_storage" == "true" ]] && spinner "Assigning Storage Blob Data Contributor..." \
+        az role assignment create \
+          --assignee "$vm_principal_id" \
+          --role "Storage Blob Data Contributor" \
+          --scope "$scope" --only-show-errors
+      [[ "$azure_enable_billing" == "true" ]] && {
+        spinner "Assigning Billing Reader..." \
+          az role assignment create --assignee "$vm_principal_id" \
+            --role "Billing Reader" --scope "$scope" --only-show-errors || true
+        spinner "Assigning Cost Management Reader..." \
+          az role assignment create --assignee "$vm_principal_id" \
+            --role "Cost Management Reader" --scope "$scope" --only-show-errors || true
+      }
+      [[ "$azure_enable_sql" == "true" ]] && spinner "Assigning SQL DB Contributor..." \
+        az role assignment create \
+          --assignee "$vm_principal_id" \
+          --role "SQL DB Contributor" \
+          --scope "$scope" --only-show-errors
+      success "RBAC roles assigned to VM managed identity."
+    else
+      warn "Could not retrieve VM managed identity — ensure System Assigned identity is enabled in Terraform."
+    fi
+  fi
 
   # ── SSH-based installation ─────────────────────────────────────────────────
   ssh_wait   "$ip" "azureuser" "$ssh_private_key"

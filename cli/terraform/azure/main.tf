@@ -36,6 +36,10 @@ resource "azurerm_linux_virtual_machine" "hermes" {
     public_key = var.ssh_public_key
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
