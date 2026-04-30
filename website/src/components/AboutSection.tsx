@@ -1,3 +1,4 @@
+"use client";
 import { Github, BookOpen, Mic, Code2, ExternalLink } from "lucide-react";
 
 const SKILLS = [
