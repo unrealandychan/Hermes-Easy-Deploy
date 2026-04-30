@@ -22,7 +22,6 @@ export default function Navbar() {
           style={{ color: "var(--text-muted)" }}>
           <a href="#features" className="hover:text-white transition-colors">Features</a>
           <a href="#clouds" className="hover:text-white transition-colors">Clouds</a>
-          <a href="#providers" className="hover:text-white transition-colors">Providers</a>
           <a href="#security" className="hover:text-white transition-colors">Security</a>
           <a href="#install" className="hover:text-white transition-colors">Install</a>
           <a href="#about" className="hover:text-white transition-colors"
